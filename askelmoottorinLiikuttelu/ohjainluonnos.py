@@ -12,10 +12,13 @@ import time # Arduinon käyttö
 
 
 
-""" Kytkentöjen luominen. Lähdetään oletuksesta, että tätä ei tehdä usein
-    uudestaan, joten vain portin vaihtelulle tarvetta.
+""" Luokka ohjaimen moottorien kytkentöjen määrittämistä varten. 
+    Oletetaan, että laitteistokokoonpanossa lähinnä usb-portin vaihtelulle 
+    saattaa tulla tarvetta (tällöinkin tulee luoda kokonaan uusi kytkennät-olio). 
+    Ohjaimen Arduinokokoonpano toteutetaan kerroMoottorienKytkennät()-metodin 
+    kuvaamalla tavalla.
 """
-class Kytkennat:
+class Moottorit:
     
     def __init__(self, portti):
         self.portti = portti
@@ -28,51 +31,61 @@ class Kytkennat:
             }
         self.moottoriX = x
         y = {
-            "dirPin" : None,
+            "dirPin" : None, #lisätään myöhemmin
             "stepPin" : None, 
             "stepsPerRevolution" : 200, 
             "steps" : 0 
             }
         self.moottoriY = y
         z = {
-            "dirPin" : None,
+            "dirPin" : None, #lisätään myöhemmin
             "stepPin" : None, 
             "stepsPerRevolution" : 200, 
             "steps" : 0 
             }
         self.moottoriZ = z
+        it = pyfirmata.util.Iterator(kortti)
+        it.start()
         
         
-    """ Kerrotaan käyttöön otetun portin tiedot """
+    """ Printtaa käyttöön otetun portin tiedot """
     def kerroPortti(self):
         print("Käytössä oleva portti:", self.portti)
     
+    
+    """ Printtaa mottorien kytkentätiedot"""
     def kerroMottorienKytkennat(self):
         print("x-moottori: ", self.moottoriX, "\ny-moottori: ", self.moottoriY, "\nz-moottori: ", self.moottoriZ)
     
-
-#class Kuvaus:
+        
+"""
+    Luokka kuvaustapahtumaa varten.
+"""        
+class Kuvaus:
+    def __init__(self, moottorit):
+        self.moottorit = moottorit
+        self.aloituskohta = { #oletusaloituskohta on (x0, y0, z0)
+        "x" : 0, # 000-sijainnissa rajakytkimet, joissa sijaitsee laskurien 0
+        "y" : 0,
+        "z" : 0
+        }
+        self.stepsX = 0 # laskuri x-moottorin askelille
+        self.stepsY = 0 # laskuri y-moottorin askelille
+        self.stepsZ = 0 # laskuri z-moottorin askelille
+        self.logi = { # logi sijaintitiedoille
+            "alku" : (0,0,0)
+            }
     
-
-
-# VÄLIAIKAISESTI sijaintitiedot = np.arange(3) #arange-funktio luo Numpy-arrayn
-#print("Login tallennusmuoto: ", sijaintitiedot.shape) # tarkistustulostus
-
-
-# moottoreiden kytkennät ja askellaskurit
- 
-
-#dirPinY = ??? # output oletuksena, y-moottorin suunta
-#stepPinY = ??? # output oletuksena, y-moottorin liikuttelu
-#stepsPerRevolutionY = 200 # y-moottori kierrosmäärä
-#stepsY = 0 # y-moottorin askeleet 
-
-#dirPinZ = ??? # output oletuksena, z-moottorin suunta
-#stepPinZ = ??? # output oletuksena, z-moottorin liikuttelu
-#stepsPerRevolutionZ = 200 # z-moottori kierrosmäärä???
-#stepsZ = 0 # z-moottorin askeleet 
-
-
+#TODO: toteutus
+    def lisaaLogiin(self):
+        
+        
+    """ Palauttaa Numpy Arrayna kulloisenkin sijaintitiedon"""
+    def kerroSijainti(self):
+        sijaintitiedot = np.arange(3) #arange-funktio luo Numpy-arrayn
+#TODO: lisää sijainti taulukkoon!
+        print("Login tallennusmuoto: ", sijaintitiedot.shape) # tarkistustulostus
+        return sijaintitiedot
 
 """ Kerrotaan aloituspisteen tiedot x, y ja z-akselin suhteen. """
 #def tellStartingPoint():
@@ -81,6 +94,7 @@ class Kytkennat:
 #    print('Aloituspisteeksi on asetettu x{0}, y{1}, z{2}'.format(sijaintitiedot[0], sijaintitiedot[1], sijaintitiedot[2]))
 
 
+# MIHIN?
 """ Alustetaan moottorille aloituskohta.
 Parametrit: 
 moottori: moottori jolle aloituspiste asetetaan
@@ -92,22 +106,13 @@ kohta: piste moottorin edustamalla akselilla, asetetaan aloituspisteeksi """
 #        print("Moottorivaihtoehdot ovat x, y ja z")
 
 
-#TODO: funktioiden kutsuminen komentoriviltä...
+
+#TODO: funktioiden kutsuminen komentoriviltä, vaatiiko plugin?
 def main():
-    testi = Kytkennat('COM4') # katsoin käyttämäni portin Arduinon kautta
-    testi.kerroPortti()
-    testi.kerroMottorienKytkennat()
-#    aloituskohta : { #oletusaloituskohta on (x0, y0, z0)
-#        "x" : 0,
-#        "y" : 0,
-#        "z" : 0
-#        }
-#    asetaAloituskohta('x', 0)
-#    asetaAloituskohta('y', 5)
-#    asetaAloituskohta('z', 1.2) #sijoitti tarkan arvon, tulosti ykkösen
-#    tellGate()
-#    tellStartingPoint()
-#    print(sijaintitiedot)
+    moottorit = Moottorit('COM4') # katsoin käyttämäni portin Arduinon kautta
+    moottorit.kerroPortti()
+    moottorit.kerroMottorienKytkennat()
+    kuvaukset = Kuvaukset(moottorit)
 
 if __name__ == "__main__":
     main()
