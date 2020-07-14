@@ -10,44 +10,61 @@ import pyfirmata # Arduinon käyttö
 import time # Arduinon käyttö
 
 
-
-
-""" Luokka ohjaimen moottorien kytkentöjen määrittämistä varten. 
-    Oletetaan, että laitteistokokoonpanossa lähinnä usb-portin vaihtelulle 
-    saattaa tulla tarvetta (tällöinkin tulee luoda kokonaan uusi kytkennät-olio). 
-    Ohjaimen Arduinokokoonpano toteutetaan kerroMoottorienKytkennät()-metodin 
-    kuvaamalla tavalla.
+""" Luokka yhden moottorin tietojen hallinnointia varten. 
 """
+class Moottori:
+    
+    def __init__(self, nimi, dirPin, stepPin, askeltaKierroksella):
+        self.nimi = nimi
+        self.dirPin = dirPin
+        self.stepPin = stepPin
+        self.askeltaKierroksella = askeltaKierroksella
+        self.sijainti = 0
+        self.voikoLiikkua = False
+
+
+    def printKytkennat(self):
+        print("{0}: dirpin: {1}, stepPin: {2}, askelta per kierros: {3}".format(self.nimi, self.dirPin, self.stepPin, self.askeltaKierroksella))
+
+
+    def nollaaSijainti(self):
+        self.sijainti = 0
+    
+    
+    def kasvataSijaintia():
+        self.sijainti = self.sijainti + 1
+
+
+    def vahennaSijaintia():
+        self.sijainti = self.sijainti - 1
+
+    
+    def pysayta(self):
+        self.voikoLiikkua = False
+
+
+    def salliLiike(self):
+        self.voikoLiikkua = True
+        
+
+""" Luokka ohjaimen kolmen moottorin säilömistä sekä kortin ja portin 
+    kytkentöjen määrittämistä varten. Oletetaan, että laitteistokokoonpanossa 
+    lähinnä usb-portin vaihtelulle saattaa tulla tarvetta (tällöinkin tulee 
+    luoda kokonaan uusi kytkennät-olio). Ohjaimen Arduinokokoonpano 
+    toteutetaan kerroMoottorienKytkennät()-metodin kuvaamalla tavalla. Luokka
+    huolehtii siitä, että liikuttelukäskyt lähetetään oikealle moottorille.
+""" 
 class Moottorit:
     
-    def __init__(self, portti):
+    def __init__(self, portti, moottoriX, moottoriY, moottoriZ):
         self.portti = portti
         self.kortti = pyfirmata.Arduino(portti)
-        x = {
-            "dirPin" : 4, # x-moottorin suuntatieto, output oletuksena
-            "stepPin" : 3, # x-moottorin liikutteluteito, output oletuksena
-            "stepsPerRevolution" : 200, # x-moottori kierrosmäärä
-            "steps" : 0 #x-moottorin askeleet, aluksi 0, SIIRTO KUVAUKSIIN?
-            }
-        self.moottoriX = x
-        y = {
-            "dirPin" : None, #lisätään myöhemmin
-            "stepPin" : None, 
-            "stepsPerRevolution" : 200, 
-            "steps" : 0 
-            }
-        self.moottoriY = y
-        z = {
-            "dirPin" : None, #lisätään myöhemmin
-            "stepPin" : None, 
-            "stepsPerRevolution" : 200, 
-            "steps" : 0 
-            }
-        self.moottoriZ = z
-        it = pyfirmata.util.Iterator(kortti)
+        self.moottoriX = moottoriX
+        self.moottoriY = moottoriY
+        self.moottoriZ = moottoriZ
+        it = pyfirmata.util.Iterator(self.kortti)
         it.start()
-        
-        
+
     """ Printtaa käyttöön otetun portin tiedot """
     def kerroPortti(self):
         print("Käytössä oleva portti:", self.portti)
@@ -55,11 +72,38 @@ class Moottorit:
     
     """ Printtaa mottorien kytkentätiedot"""
     def kerroMottorienKytkennat(self):
-        print("x-moottori: ", self.moottoriX, "\ny-moottori: ", self.moottoriY, "\nz-moottori: ", self.moottoriZ)
-    
-        
+        print("Moottoreiden määritykset:")
+        self.moottoriX.printKytkennat()
+        self.moottoriY.printKytkennat()
+        self.moottoriZ.printKytkennat()
+
+
+    """ Metodi jolla asetetaan suunta halutun moottorin liikuttamista varten. 
+        Parameterinä
+        annetaan 1, jonka merkitys on myötäpäivään, tai 0, jonka merkitys 
+        vastapäivään."""
+    def suunta(self, moottorinNimi, myotaVaiVasta):
+        if moottorinNimi == 'x':
+            dirPin = self.moottoriX.dirPin
+        elif moottorinNimi == 'y':
+            dirPin = self.moottoriY.dirPin
+        elif moottorinNimi == 'z':
+            dirPin = self.moottoriZ.dirPin
+        else: print("Moottorin nimen tulee olla x, y tai z")
+        if myotaVaiVasta == 0:
+            self.kortti.digital[dirPin].write(0) # LOW-arvolla vastapäivään
+        elif myotaVaiVasta == 1:
+            self.kortti.digital[dirPin].write(1) # HIGH-arvolla myötäpäivään
+        else: print("Suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
+
+
+""" Metodi jolla... halutun moottorin liikuttelua varten
 """
-    Luokka kuvaustapahtumaa varten.
+# Mieti liikuttelun toteutus
+
+             
+"""
+    Luokka kuvaustapahtuman hallitaa varten.
 """        
 class Kuvaus:
     def __init__(self, moottorit):
@@ -69,23 +113,21 @@ class Kuvaus:
         "y" : 0,
         "z" : 0
         }
-        self.stepsX = 0 # laskuri x-moottorin askelille
-        self.stepsY = 0 # laskuri y-moottorin askelille
-        self.stepsZ = 0 # laskuri z-moottorin askelille
-        self.logi = { # logi sijaintitiedoille
+
+        self.loki = { # loki sijaintitiedoille
             "alku" : (0,0,0)
             }
     
 #TODO: toteutus
-    def lisaaLogiin(self):
+#    def lisaaLogiin(self):
         
         
     """ Palauttaa Numpy Arrayna kulloisenkin sijaintitiedon"""
-    def kerroSijainti(self):
-        sijaintitiedot = np.arange(3) #arange-funktio luo Numpy-arrayn
+#    def kerroSijainti(self):
+#        sijaintitiedot = np.arange(3) #arange-funktio luo Numpy-arrayn
 #TODO: lisää sijainti taulukkoon!
-        print("Login tallennusmuoto: ", sijaintitiedot.shape) # tarkistustulostus
-        return sijaintitiedot
+#        print("Login tallennusmuoto: ", sijaintitiedot.shape) # tarkistustulostus
+#        return sijaintitiedot
 
 """ Kerrotaan aloituspisteen tiedot x, y ja z-akselin suhteen. """
 #def tellStartingPoint():
@@ -109,10 +151,13 @@ kohta: piste moottorin edustamalla akselilla, asetetaan aloituspisteeksi """
 
 #TODO: funktioiden kutsuminen komentoriviltä, vaatiiko plugin?
 def main():
-    moottorit = Moottorit('COM4') # katsoin käyttämäni portin Arduinon kautta
+    moottoriX = Moottori('x', 4, 3, 200)
+    moottoriY = Moottori('y', None, None, 200)
+    moottoriZ = Moottori('z', None, None, 200)
+    moottorit = Moottorit('COM6', moottoriX, moottoriY, moottoriZ) # katso portti Arduinon kautta
     moottorit.kerroPortti()
     moottorit.kerroMottorienKytkennat()
-    kuvaukset = Kuvaukset(moottorit)
+    kuvaus = Kuvaus(moottorit)
 
 if __name__ == "__main__":
     main()
