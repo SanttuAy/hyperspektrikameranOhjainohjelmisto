@@ -10,6 +10,7 @@ import pyfirmata # Arduinon käyttö
 import time # Arduinon käyttö
 
 
+
 """ Luokka yhden moottorin tietojen hallinnointia varten. 
     Luokka huolehtii yksittäisen moottorin tietojen (kytkennät, askelta 
     kierroksella, rajakytkimet, sijainti) kokoamisesta ja ylläpidosta.
@@ -18,13 +19,14 @@ class Moottori:
     
     
     """ Konstruktori. Parametrit: moottorin nimi (x, y tai z), arduinokytkennöistä
-    dirpin ja steppin, moottorin steps 
-    per revolution -tieto ja moottorin akselin rajakytkimien pinnit Arduinossa - ensin 0-päädyn 
-    kytkin, sitten toisen pään. """
+        dirpin ja steppin, moottorin steps 
+        per revolution -tieto ja moottorin akselin rajakytkimien pinnit Arduinossa - ensin 0-päädyn 
+        kytkin, sitten toisen pään. """
     def __init__(self, nimi, dirPin, stepPin, askeltaKierroksella, rajakytkin_0, rajakytkin_1):
 #    def __init__(self, nimi, dirPin, stepPin, askeltaKierroksella):
         self.nimi = nimi
         self.dirPin = dirPin
+        self.dirPin_Tila = 0 #False  
         self.stepPin = stepPin
         self.askeltaKierroksella = askeltaKierroksella
         self.sijainti = 0
@@ -33,33 +35,56 @@ class Moottori:
         self.rajakytkin_1 = rajakytkin_1
         self.rajakytkin1_Tila = 0
         self.voiLiikkua = True
+        self.palaamassa = False
 
 
+    """ Suunta False (0, vastapäivään) tai True (1, myötäpäivään)"""
+    def setSuunta(self, suunta):
+        self.dirPin_Tila = suunta
+
+
+    """ Setteri 0-rajakytkimen tilan muuttamiseksi"""
     def setRajakytkin0_Tila(self, tila):
         self.rajakytkin0_Tila = tila
-    
 
+    
+    """ Setteri 1-rajakytkimen tilan muuttamiseksi"""
     def setRajakytkin1_Tila(self, tila):
         self.rajakytkin1_Tila = tila
 
 
+    """ Setteri joka kieltää mottorilta luvan liikkua. Käytetään Moottorit-oliossa
+        liikuttelumetodeissa rajakytkimien yhteydessä."""
     def estaLiike(self):
         self.voiLiikkua = False
 
 
+    """ Setteri joka sallii mottorin liikkua. Käytetään Moottorit-oliossa
+        liikuttelumetodeissa rajakytkimien yhteydessä."""
     def salliLiike(self):
         self.voiLiikkua = True
 
 
+    """ Askellaskurin toimintaan liittyvä setteri, jonka avulla tiedetään, tuleeko
+        askeleet plussata vai miinustaa kokonaismäärästä."""
+    def lahtee(self):
+        self.palaamassa = False
+        
+        
+    """ Laskurin toimintaan liittyvä setteri. Ks. edellinen. """
+    def palaa(self):
+        self.palaamassa = True
+        
+
     """ Metodi jolla printataan konsoliin tieto siitä, miten kyseisen moottorin
-    kytkennät on asetettu.
-    """
+        kytkennät on asetettu."""
     def printKytkennat(self):
 #        print("{0}: dirpin: {1}, stepPin: {2}, askelta per kierros: {3}, rajakytkin_0 pinnissä: {4}, rajakytkin_1 pinnissä: {5}".format(self.nimi, self.dirPin, self.stepPin, self.askeltaKierroksella, self.rajakytkin_0), self.rajakytkin_1)
         print("{0}: dirpin: {1}, stepPin: {2}, askelta per kierros: {3}".format(self.nimi, self.dirPin, self.stepPin, self.askeltaKierroksella))
 
+
     """ Metodi joka nollaa moottorin ohjaaman kelkan sijaintia laskevan 
-    askelmittarin"""
+        askelmittarin"""
     def nollaaSijainti(self):
         self.sijainti = 0
 
@@ -70,19 +95,18 @@ class Moottori:
 
 
     """ Metodi jolla vähennetään askelia askelmittarista. Käytetään akselin 
-    ääripäästä (jolloin x/y/z > 0) palatessa."""
+        ääripäästä (jolloin x/y/z > 0) palatessa."""
     def vahennaSijaintia(self):
         self.sijainti -= 1
 
     
     """ Metodi joka palauttaa askellaskurin lukeman moottorin ohjaaman kelkan 
-    oletetusta sijainnista. Huom! Todellista sijaintia ei tiedetä. Laskelma kertoo
-    0-sijainnin rajakytkimeltä käskytettyjen askelten määrän, jotka otettu 
-    silloin kun salliLiike oli True."""
+        oletetusta sijainnista. Huom! Todellista sijaintia ei tiedetä. Laskelma kertoo
+        0-sijainnin rajakytkimeltä käskytettyjen askelten määrän, jotka otettu 
+        silloin kun salliLiike oli True."""
     def getSijainti(self):
         return self.sijainti
-
-
+    
         
         
 """ Luokka ohjaimen kolmen moottorin säilömistä sekä kortin ja portin 
@@ -97,7 +121,7 @@ class Moottorit:
     
     
     """ Konstruktori. Parametreinä usb-kaapelin käyttämä pc:n portti ja x-, y-
-    ja z-akseleilla kelkkaa liikuttelevat moottorit."""
+        ja z-akseleilla kelkkaa liikuttelevat moottorit."""
     def __init__(self, portti, moottoriX, moottoriY, moottoriZ):
  #   def __init__(self, portti, moottoriX): #POISTA TÄMÄ!
  #   def __init__(self, portti, moottoriX, moottoriZ): #POISTA, väliaikainen
@@ -114,120 +138,164 @@ class Moottorit:
         self.kortti.digital[moottoriY.rajakytkin_1].mode = pyfirmata.INPUT
         self.kortti.digital[moottoriZ.rajakytkin_0].mode = pyfirmata.INPUT #OUTPUT oletuksena?
         self.kortti.digital[moottoriZ.rajakytkin_1].mode = pyfirmata.INPUT
-        while True:
+            
+            
+    """ Metodi joka tarkistaa parametrissä nimetyn moottorin osalta, onko tultu
+        jommalle kummalle sen rajakytkimistä. Jos tullaan kytkimelle, asetetaan
+        moottorin liikkumissuunta valmiiksi päinvastaiseksi."""
+    def tarkistaKytkimet(self, moottorinNimi):
+        if moottorinNimi == 'x':
+#            kytkimenTila0 = self.kortti.digital[self.moottoriX.rajakytkin_0].read()
+#            self.moottoriX.setRajakytkin0_Tila(kytkimenTila0)
+#            kytkimenTila1 = self.kortti.digital[self.moottoriX.rajakytkin_1].read()
+#            self.moottoriX.setRajakytkin1_Tila(kytkimenTila1)
             self.moottoriX.setRajakytkin0_Tila(self.kortti.digital[self.moottoriX.rajakytkin_0].read())
             self.moottoriX.setRajakytkin1_Tila(self.kortti.digital[self.moottoriX.rajakytkin_1].read())
             if self.moottoriX.rajakytkin0_Tila == 1:
+#                self.moottoriX.estaLiike()
+                self.moottoriX.nollaaSijainti()
+                self.vaihdaSuunta(moottorinNimi)
+                self.moottoriX.lahtee()
                 print("x tuli 0-kytkimelle")
             elif self.moottoriX.rajakytkin1_Tila == 1:
+ #               self.moottoriX.estaLiike()
+                self.vaihdaSuunta(moottorinNimi)
+                self.moottoriX.palaa()
                 print("x tuli 1-kytkimelle") 
             elif self.moottoriX.rajakytkin0_Tila == 0 and self.moottoriX.rajakytkin1_Tila == 0:
                 print("x voi liikkua")
-            else: 
+            else:
+ #               self.moottoriX.estaLiike()
                 print("x:n rajakytkimien lukemisessa ongelmia")
+        elif moottorinNimi == 'y':
             self.moottoriY.setRajakytkin0_Tila(self.kortti.digital[self.moottoriY.rajakytkin_0].read())
             self.moottoriY.setRajakytkin1_Tila(self.kortti.digital[self.moottoriY.rajakytkin_1].read())
             if self.moottoriY.rajakytkin0_Tila == 1:
+ #               self.moottoriY.estaLiike()
+                self.moottoriY.nollaaSijainti()
+                self.vaihdaSuunta(moottorinNimi)
+                self.moottoriY.lahtee()
                 print("y tuli 0-kytkimelle")
             elif self.moottoriY.rajakytkin1_Tila == 1:
+ #               self.moottoriY.estaLiike()
+                self.vaihdaSuunta(moottorinNimi)
+                self.moottoriY.palaa()
                 print("y tuli 1-kytkimelle")
             elif self.moottoriY.rajakytkin0_Tila == 0 and self.moottoriY.rajakytkin1_Tila == 0:
                 print("y voi liikkua")
             else: 
+ #               self.moottoriY.estaLiike()
                 print("y:n rajakytkimien lukemisessa ongelmia")
+        elif moottorinNimi == 'z':
             self.moottoriZ.setRajakytkin0_Tila(self.kortti.digital[self.moottoriZ.rajakytkin_0].read())
             self.moottoriZ.setRajakytkin1_Tila(self.kortti.digital[self.moottoriZ.rajakytkin_1].read())
             if self.moottoriZ.rajakytkin0_Tila == 1:
+ #               self.moottoriZ.estaLiike()
+                self.moottoriZ.nollaaSijainti()
+                self.vaihdaSuunta(moottorinNimi)
+                self.moottoriZ.lahtee()
                 print("z tuli 0-kytkimelle")
             elif self.moottoriZ.rajakytkin1_Tila == 1:
+ #               self.moottoriZ.estaLiike()
+                self.vaihdaSuunta(moottorinNimi)
+                self.moottoriZ.palaa()
                 print("z tuli 1-kytkimelle")
             elif self.moottoriZ.rajakytkin0_Tila == 0 and self.moottoriZ.rajakytkin1_Tila == 0:
                 print("z voi liikkua")
             else: 
+ #               self.moottoriZ.estaLiike()
                 print("z:n rajakytkimien lukemisessa ongelmia")
-
-            
-            
-
-    """ Printtaa konsoliin käyttöön otetun portin nimen. 
-    Nimi löytyy esim. Arduinon kautta"""
-    def printPortti(self):
-        print("Käytössä oleva portti:", self.portti)
-    
-    
-    """ Metodi joka printtaa konsoliin kolmen mottorin kytkentätiedot sekä
-    moottoriominaisuuksista steps per revolution -tiedon"""
-    def printMoottorienKytkennat(self):
-        print("Moottoreiden määritykset:")
-        self.moottoriX.printKytkennat()
-        self.moottoriY.printKytkennat()
-        self.moottoriZ.printKytkennat()
+        else: 
+ #           self.moottoriX.estaLiike()# TODO eli jos tulee kutsuttua väärin, kaikkien moottoreiden liike estetty, kun täältä palataan
+ #           self.moottoriY.estaLiike()
+ #           self.moottoriZ.estaLiike()
+            print("Kytkimiä tarkastettaessa moottorin nimi oltava x, y tai z.")
 
 
     """ Metodi jolla asetetaan suunta halutun moottorin liikuttamista varten. 
-        Parameterinä
-        annetaan joko 1, jonka merkitys on myötäpäivään, 
-        tai 0, jonka merkitys on vastapäivään."""
+    Parametereinä moottorin nimi ja 1 tai 0, 
+    missä 0= vastapäivään, 1= myötäpäivään."""
     def setSuunta(self, moottorinNimi, myotaVaiVasta):
+        print("setSuunta sai suunta-arvoksi: ", myotaVaiVasta)
         if moottorinNimi == 'x':
+            moottori = self.moottoriX
             dirPin = self.moottoriX.dirPin
         elif moottorinNimi == 'y':
+            moottori = self.moottoriY
             dirPin = self.moottoriY.dirPin
         elif moottorinNimi == 'z':
+            moottori = self.moottoriZ
             dirPin = self.moottoriZ.dirPin
         else: print("Moottorin nimen tulee olla x, y tai z")
         if myotaVaiVasta == 0:
             self.kortti.digital[dirPin].write(0) # LOW-arvolla vastapäivään
+            moottori.setSuunta(False)
         elif myotaVaiVasta == 1:
-            self.kortti.digital[dirPin].write(1) # HIGH-arvolla myötäpäivään
-        else: print("Suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
+            self.kortti.digital[dirPin].write(1)
+            moottori.setSuunta(True)
+        else: print("SetSuunnan suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
 
 
-    """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärä."""
+    """ Metodi jolla käyttäjä voi vaihtaa parametrinä annetun moottorin nykyisen 
+    liikkumasuunnan päinvastaiseksi."""
+    def vaihdaSuunta(self, moottorinNimi):
+        if moottorinNimi == 'x':
+            moottori = self.moottoriX
+            dirPin = self.moottoriX.dirPin
+        elif moottorinNimi == 'y':
+            moottori = self.moottoriY
+            dirPin = self.moottoriY.dirPin
+        elif moottorinNimi == 'z':
+            moottori = self.moottoriZ
+            dirPin = self.moottoriZ.dirPin
+        else: print("Suuntaa vaihdettaessa moottorin nimen tulee olla x, y tai z")
+        if moottori.dirPin_Tila == 0:
+            self.kortti.digital[dirPin].write(1)
+        elif moottori.dirPin_Tila == 1:
+            self.kortti.digital[dirPin].write(0)
+        else: 
+            print("vaihdaSuunta dirPin: ", dirPin)
+            print("Suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
+
+
+    def laskuri(self, moottori):
+        if moottori.palaamassa == False:
+            moottori.kasvataSijaintia()
+        else:
+            moottori.vahennaSijaintia()
+
+
+    """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärä. Jos
+    kesken matkan tullaan rajakytkimelle, moottori pystähtyy siihen, eikä käytä
+    jäljellä olevia askelia palaamiseen."""
     def liikuAskelta(self, moottorinNimi, montakoAskelta):
         if moottorinNimi == 'x':
-            stepPin = self.moottoriX.stepPin
-            rajakytkin_0 = self.moottoriX.rajakytkin_0
- #           rajakytkin0_Tila = self.moottoriX.rajakytkin0_Tila
-            rajakytkin_1 = self.moottoriX.rajakytkin_1
- #           rajakytkin1_Tila = self.moottoriX.rajakytkin1_Tila
+            moottori = self.moottoriX
+            stepPin = self.moottoriX.stepPin           
         elif moottorinNimi == 'y':
             stepPin = self.moottoriY.stepPin
-            rajakytkin_0 = self.moottoriY.rajakytkin_0
- #           rajakytkin0_Tila = self.moottoriY.rajakytkin0_Tila
-            rajakytkin_1 = self.moottoriY.rajakytkin_1
- #           rajakytkin1_Tila = self.moottoriY.rajakytkin1_Tila
+            moottori = self.moottoriY
         elif moottorinNimi == 'z':
             stepPin = self.moottoriZ.stepPin
-            rajakytkin_0 = self.moottoriZ.rajakytkin_0
- #           rajakytkin0_Tila = self.moottoriZ.rajakytkin0_Tila
-            rajakytkin_1 = self.moottoriZ.rajakytkin_1
- #           rajakytkin1_Tila = self.moottoriZ.rajakytkin1_Tila
+            moottori = self.moottoriZ
         else: print("Moottorin nimen tulee olla x, y tai z")
         for i in range(montakoAskelta):
-            rajakytkin0_Tila = self.kortti.digital[rajakytkin_0].read()
-            print("tila: ", rajakytkin0_Tila)
-            rajakytkin1_Tila = self.kortti.digital[rajakytkin_1].read()
-            print("tila: ", rajakytkin1_Tila)
-        #    if rajakytkin0_Tila == 1:
-        #        print("{0} tuli 0-kytkimelle".format(moottorinNimi))
-        #        break
-        #    elif rajakytkin1_Tila == 1:
-        #        print("{0} tuli 1-kytkimelle".format(moottorinNimi))
-        #        break
-        #    elif rajakytkin_0 == 0 and rajakytkin_1 == 0: # lue rajakytkin, jos auki (0?)
-        #        self.kortti.digital[stepPin].write(1) # LOW-HIGH -impulssi saa moottorin liikkumaan
-        #        time.sleep(2000 * 10**(-6)) # hidas liike...
-        #        self.kortti.digital[stepPin].write(0)
-        #        time.sleep(2000 * 10**(-6))
-        #    else: 
-        #        print("Ongelmia rajakytkimen lukemisessa.")
-        #print('Liikutettiin {0}-moottoria {1} askelta.'.format(moottorinNimi, montakoAskelta))
+            self.tarkistaKytkimet(moottorinNimi)
+            if moottori.voiLiikkua == True:
+                self.kortti.digital[stepPin].write(1) 
+                time.sleep(2000 * 10**(-6)) # hidas liike. Nopean kerroin esim.500
+                self.kortti.digital[stepPin].write(0)
+                time.sleep(2000 * 10**(-6))
+                self.laskuri(moottori)
+            else: 
+                print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorinNimi))
+                break
+        print('Liikutettiin {0}-moottoria sijaintiin {1}.'.format(moottorinNimi, moottori.sijainti))
 
 
 # POISTA JOS TURHA
     """ Metodi jolla liikutetaan valittua moottoria asetettu määrä 
-    kokonaisia kierroksia
+    kokonaisia kierroksia TÄSSÄ EI KYTKINTEN TARKASTELUA TAI LASKURIA...
     """
     def liikuKierrosta(self, moottorinNimi, montakoKierrosta):
         if moottorinNimi == 'x':
@@ -248,55 +316,6 @@ class Moottorit:
                 time.sleep(2000 * 10**(-6))
          #   steps += 1 #muuta tähän toteutukseen sopivaksi #HUOMAA LASKURISTA! Laskee oletettuja askeleita Laskenta jatkuu vaikkei moottori saisi virtaa ollenkaan
         print('Liikutettiin {0}-moottoria {1} kierrosta.'.format(moottorinNimi, montakoKierrosta))
-#TODO: KORJAA TULOSTUS KÄYTTÄMÄÄN LASKURIN LUKEMAA!
-
-    def lueKytkimet(self, moottorinNimi):
-        if moottorinNimi == 'x':
-            rajakytkin0_Tila = self.kortti.digital[self.moottoriX.rajakytkin_0].read()
-            if rajakytkin0_Tila == 1:
-                print("x tuli 0-kytkimelle")
-            elif rajakytkin0_Tila == 0: # auki
-                print("x voi liikkua.")
-            else: 
-                print("{0}-moottorin 0-kytkintä ei voitu lukea.  Kytkimen tila: {1}".format(moottorinNimi, rajakytkin0_Tila))
-            rajakytkin1_Tila = self.kortti.digital[self.moottoriX.rajakytkin_1].read()
-            if rajakytkin1_Tila == 1:
-                print("x tuli 1-kytkimelle")
-            elif rajakytkin1_Tila == 0: # auki
-                print("x voi liikkua.")
-            else: 
-                print("{0}-moottorin 1-kytkintä ei voitu lukea.  Kytkimen tila: {1}".format(moottorinNimi, rajakytkin1_Tila))   
-        elif moottorinNimi == 'y':
-            rajakytkin0_Tila = self.kortti.digital[self.moottoriY.rajakytkin_0].read()
-            if rajakytkin0_Tila == 1:
-                print("y tuli 0-kytkimelle")
-            elif rajakytkin0_Tila == 0: # auki
-                print("y voi liikkua.")
-            else: 
-                print("{0}-moottorin 0-kytkintä ei voitu lukea.  Kytkimen tila: {1}".format(moottorinNimi, rajakytkin0_Tila))
-            rajakytkin1_Tila = self.kortti.digital[self.moottoriY.rajakytkin_1].read()
-            if rajakytkin1_Tila == 1:
-                print("y tuli 1-kytkimelle")
-            elif rajakytkin1_Tila == 0: # auki
-                print("y voi liikkua.")
-            else: 
-                print("{0}-moottorin 1-kytkintä ei voitu lukea.  Kytkimen tila: {1}".format(moottorinNimi, rajakytkin1_Tila))   
-        elif moottorinNimi == 'z':
-            rajakytkin0_Tila = self.kortti.digital[self.moottoriZ.rajakytkin_0].read()
-            if rajakytkin0_Tila == 1:
-                print("z tuli 0-kytkimelle")
-            elif rajakytkin0_Tila == 0: # auki
-                print("z voi liikkua.")
-            else: 
-                print("{0}-moottorin 0-kytkintä ei voitu lukea.  Kytkimen tila: {1}".format(moottorinNimi, rajakytkin0_Tila))
-            rajakytkin1_Tila = self.kortti.digital[self.moottoriZ.rajakytkin_1].read()
-            if rajakytkin1_Tila == 1:
-                print("z tuli 1-kytkimelle")
-            elif rajakytkin1_Tila == 0: # auki
-                print("z voi liikkua.")
-            else: 
-                print("{0}-moottorin 1-kytkintä ei voitu lukea.  Kytkimen tila: {1}".format(moottorinNimi, rajakytkin1_Tila))   
-        else: print("Moottorin nimen tulee olla x, y tai z")
         
 
     """ Metodi kaikkien moottoreiden palauttamista varten, palauttaa Numpy arrayn"""
@@ -304,6 +323,22 @@ class Moottorit:
 #        sijainti = np.arange(3) #arange-funktio luo Numpy-arrayn
         sijainti = np.array([self.moottoriX.sijainti, self.moottoriY.sijainti, self.moottoriZ.sijainti])        
         return sijainti
+
+
+    """ Printtaa konsoliin käyttöön otetun portin nimen. 
+    Nimi löytyy esim. Arduinon kautta"""
+    def printPortti(self):
+        print("Käytössä oleva portti:", self.portti)
+    
+    
+    """ Metodi joka printtaa konsoliin kolmen mottorin kytkentätiedot sekä
+    moottoriominaisuuksista steps per revolution -tiedon"""
+    def printMoottorienKytkennat(self):
+        print("Moottoreiden määritykset:")
+        self.moottoriX.printKytkennat()
+        self.moottoriY.printKytkennat()
+        self.moottoriZ.printKytkennat()
+
         
 """
     Luokka kuvaustapahtuman hallintaa varten. Luokka käyttää moottorit-oliota
@@ -369,19 +404,19 @@ def main():
   #  moottorit = Moottorit('COM6', moottoriX, moottoriZ) #väliaikainen, kunnes y toimii
 #    moottorit.printPortti()
 #    moottorit.printMoottorienKytkennat()
-#    moottorit.setSuunta('x', 1)
-#    moottorit.setSuunta('y', 0)
-#    moottorit.setSuunta('z', 1)
+    moottorit.setSuunta('x', 1) # True
+    moottorit.setSuunta('y', 0) # False
+    moottorit.setSuunta('z', 1) # True
 #    moottorit.liikuKierrosta('x', 1)
 #    moottorit.liikuKierrosta('y', 1)
 #    moottorit.liikuKierrosta('z', 1)
  #   moottorit.setSuunta('z', 1)
  #   moottorit.liikuKierrosta('z', 1)
-#    moottorit.liikuAskelta('z', 100)
 #    moottorit.setSuunta('x', 0)
 #    moottorit.liikuKierrosta('x', 1)
-#    moottorit.liikuAskelta('x', 300)
-#    moottorit.liikuAskelta('y', 300)
+    moottorit.liikuAskelta('x', 300)
+    moottorit.liikuAskelta('y', 300)
+    moottorit.liikuAskelta('z', 600)
 #    kuvaus = Kuvaus(moottorit)
 #    while True:
 #        it = pyfirmata.util.Iterator(moottorit.kortti)
