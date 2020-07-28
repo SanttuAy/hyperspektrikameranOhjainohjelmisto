@@ -5,10 +5,11 @@ Created on Wed Jul  8 09:59:45 2020
 Askelmoottorin lineaarisiirtimen ohjainohjelmiston ensimmäinen versio.
 @author: Santtu
 """
-#import sys # komentorivikutsut
+import sys # komentorivikutsut...
 import numpy as np # Numpy Array
 import pyfirmata # Arduinon käyttö
 import time # Arduinon käyttö
+import serial #sarjaportti
 
 
 
@@ -122,19 +123,20 @@ class Moottorit:
     """ Konstruktori. Parametreinä usb-kaapelin käyttämä pc:n portti ja x-, y-
         ja z-akseleilla kelkkaa liikuttelevat moottorit."""
     def __init__(self, portti, moottoriX, moottoriY, moottoriZ):
-        self.portti = portti
-        self.kortti = pyfirmata.Arduino(portti)
-        self.moottoriX = moottoriX
-        self.moottoriY = moottoriY
-        self.moottoriZ = moottoriZ 
-        it = pyfirmata.util.Iterator(self.kortti)
-        it.start()
-        self.kortti.digital[moottoriX.rajakytkin_0].mode = pyfirmata.INPUT # oletuksena OUTPUT?
-        self.kortti.digital[moottoriX.rajakytkin_1].mode = pyfirmata.INPUT
-        self.kortti.digital[moottoriY.rajakytkin_0].mode = pyfirmata.INPUT
-        self.kortti.digital[moottoriY.rajakytkin_1].mode = pyfirmata.INPUT
-        self.kortti.digital[moottoriZ.rajakytkin_0].mode = pyfirmata.INPUT
-        self.kortti.digital[moottoriZ.rajakytkin_1].mode = pyfirmata.INPUT
+            self.portti = portti
+            self.kortti = pyfirmata.Arduino(portti) #Arduino.AUTODETECT ei toiminut
+            self.moottoriX = moottoriX
+            self.moottoriY = moottoriY
+            self.moottoriZ = moottoriZ 
+            self.it = pyfirmata.util.Iterator(self.kortti)
+            self.it.start()
+            self.kortti.digital[moottoriX.rajakytkin_0].mode = pyfirmata.INPUT # oletuksena OUTPUT?
+            self.kortti.digital[moottoriX.rajakytkin_1].mode = pyfirmata.INPUT
+            self.kortti.digital[moottoriY.rajakytkin_0].mode = pyfirmata.INPUT
+            self.kortti.digital[moottoriY.rajakytkin_1].mode = pyfirmata.INPUT
+            self.kortti.digital[moottoriZ.rajakytkin_0].mode = pyfirmata.INPUT
+            self.kortti.digital[moottoriZ.rajakytkin_1].mode = pyfirmata.INPUT
+
             
 
     """ Poista metodi jos turha, tein kytkinten tarkastusmetodin yksinkertaistamista
@@ -155,19 +157,17 @@ class Moottorit:
         moottorin liikkumissuunta valmiiksi päinvastaiseksi."""
     def tarkistaKytkimet(self, moottorinNimi):
         if moottorinNimi == 'x':
-#            self.moottoriX.setRajakytkin0_Tila(self.kortti.digital[self.moottoriX.rajakytkin_0].read())
-#            self.moottoriX.setRajakytkin1_Tila(self.kortti.digital[self.moottoriX.rajakytkin_1].read())
             kytkimenTila0 = self.kortti.digital[self.moottoriX.rajakytkin_0].read()
             kytkimenTila1 = self.kortti.digital[self.moottoriX.rajakytkin_1].read()
             while kytkimenTila0 is None or kytkimenTila1 is None:
-                print("odotetaan, x:n kytkimiä")
+                print("odotetaan yhteyttä x:n kytkimiin")
                 time.sleep(0.1)
                 kytkimenTila0 = self.kortti.digital[self.moottoriX.rajakytkin_0].read()
                 kytkimenTila1 = self.kortti.digital[self.moottoriX.rajakytkin_1].read()
             else:
                 self.moottoriX.setRajakytkin0_Tila(kytkimenTila0)
                 self.moottoriX.setRajakytkin1_Tila(kytkimenTila1)
-                print("X: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
+          #      print("X: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
                 if self.moottoriX.rajakytkin0_Tila == 1:
                     self.moottoriX.nollaaSijainti() #tultiin sijaintiin 0
                     self.vaihdaSuunta(moottorinNimi) #rajakytkimellä käännyttävä
@@ -186,19 +186,17 @@ class Moottorit:
                     print("x:n rajakytkimien lukemisessa ongelmia")
                     self.moottoriX.estaLiike()
         elif moottorinNimi == 'y':
-#            self.moottoriY.setRajakytkin0_Tila(self.kortti.digital[self.moottoriY.rajakytkin_0].read())
-#            self.moottoriY.setRajakytkin1_Tila(self.kortti.digital[self.moottoriY.rajakytkin_1].read())
             kytkimenTila0 = self.kortti.digital[self.moottoriY.rajakytkin_0].read()
             kytkimenTila1 = self.kortti.digital[self.moottoriY.rajakytkin_1].read()
             while kytkimenTila0 is None or kytkimenTila1 is None:
-                print("odotetaan, y:n kytkimiä")
+                print("odotetaan yhteyttä y:n kytkimiin")
                 time.sleep(0.1)
                 kytkimenTila0 = self.kortti.digital[self.moottoriY.rajakytkin_0].read()
                 kytkimenTila1 = self.kortti.digital[self.moottoriY.rajakytkin_1].read()
             else:
                 self.moottoriY.setRajakytkin0_Tila(kytkimenTila0)
                 self.moottoriY.setRajakytkin1_Tila(kytkimenTila1)
-                print("Y: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
+            #    print("Y: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
                 if self.moottoriY.rajakytkin0_Tila == 1:
                     self.moottoriY.estaLiike()
                     self.moottoriY.nollaaSijainti()
@@ -217,19 +215,17 @@ class Moottorit:
                     self.moottoriY.estaLiike()
                     print("y:n rajakytkimien lukemisessa ongelmia")
         elif moottorinNimi == 'z':
-#            self.moottoriZ.setRajakytkin0_Tila(self.kortti.digital[self.moottoriZ.rajakytkin_0].read())
-#            self.moottoriZ.setRajakytkin1_Tila(self.kortti.digital[self.moottoriZ.rajakytkin_1].read())
             kytkimenTila0 = self.kortti.digital[self.moottoriZ.rajakytkin_0].read()
             kytkimenTila1 = self.kortti.digital[self.moottoriZ.rajakytkin_1].read()
             while kytkimenTila0 is None or kytkimenTila1 is None:
-                print("odotetaan, z:n kytkimiä")
+                print("odotetaan yhteyttä z:n kytkimiin")
                 time.sleep(0.1)
                 kytkimenTila0 = self.kortti.digital[self.moottoriZ.rajakytkin_0].read()
                 kytkimenTila1 = self.kortti.digital[self.moottoriZ.rajakytkin_1].read()
             else:
                 self.moottoriZ.setRajakytkin0_Tila(kytkimenTila0)
                 self.moottoriZ.setRajakytkin1_Tila(kytkimenTila1)
-                print("Z: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
+              #  print("Z: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
                 if self.moottoriZ.rajakytkin0_Tila == 1:
                     self.moottoriZ.estaLiike()
                     self.moottoriZ.nollaaSijainti()
@@ -248,10 +244,8 @@ class Moottorit:
                     self.moottoriZ.estaLiike()
                     print("z:n rajakytkimien lukemisessa ongelmia")
         else: 
-#            self.moottoriX.estaLiike()# TODO eli jos tulee kutsuttua väärin, kaikkien moottoreiden liike estetty, kun täältä palataan
-#            self.moottoriY.estaLiike() #liikuAskelta korjaa tilanteen vain 1 moottorin osalta
-#            self.moottoriZ.estaLiike()
             print("Kytkimiä tarkastettaessa moottorin nimi oltava x, y tai z.")
+            # TODO: Heitä tässä poikkeus jolla pysäytetään myös liikuAskelta()-metodin suoritus
 
 
     """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärä. Jos
@@ -268,18 +262,21 @@ class Moottorit:
             stepPin = self.moottoriZ.stepPin
             moottori = self.moottoriZ
         else: print("Moottorin nimen tulee olla x, y tai z")
-        for i in range(montakoAskelta):
-            self.tarkistaKytkimet(moottorinNimi)
-            if moottori.voiLiikkua == True:
-                self.kortti.digital[stepPin].write(1) 
-                time.sleep(2000 * 10**(-6)) # hidas liike. Nopean kerroin esim.500
-                self.kortti.digital[stepPin].write(0)
-                time.sleep(2000 * 10**(-6))
-                self.laskuri(moottori)
-            else: 
-                print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorinNimi))
-                break
-        print('Liikutettiin {0}-moottoria sijaintiin {1}.'.format(moottorinNimi, moottori.sijainti))
+        try:
+            for i in range(montakoAskelta):
+                self.tarkistaKytkimet(moottorinNimi)
+                if moottori.voiLiikkua == True:
+                    self.kortti.digital[stepPin].write(1) 
+                    time.sleep(2000 * 10**(-6)) # hidas liike. Nopean kerroin esim.500
+                    self.kortti.digital[stepPin].write(0)
+                    time.sleep(2000 * 10**(-6))
+                    self.laskuri(moottori)
+                else: 
+                    print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorinNimi))
+                    break
+        except serial.SerialTimeoutException:
+            print("USB-yhteys katkesi")
+        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottorinNimi, moottori.sijainti))
         moottori.salliLiike()
 
 
@@ -415,6 +412,7 @@ def main():
  #   print(moottoriX.dirPin_Tila, moottoriX.rajakytkin0_Tila, moottoriX.rajakytkin1_Tila, moottoriX.voiLiikkua)
  #   moottoriX.estaLiike()
  #   print(moottoriX.voiLiikkua)
+ #   try:
     moottorit = Moottorit('COM6', moottoriX, moottoriY, moottoriZ) # katso portti Arduinon kautta
 #    moottorit.lueKytkimet('x')
 #    moottorit.lueKytkimet('y')
@@ -435,6 +433,10 @@ def main():
     moottorit.liikuAskelta('x', 400)
     moottorit.liikuAskelta('y', 400)
     moottorit.liikuAskelta('z', 800)
+    moottorit.kortti.exit()
+ #   except serial.SerialException: #Aiheuttaa ongelmia viimeisille riveille???
+ #       print("Ongelmia portin lukemisessa. Kytke kaapeli arduinon käyttämään porttiin."
+ #tähän - myöhemmin kuvausolioon?
 #    kuvaus = Kuvaus(moottorit)
 #    while True:
 #        it = pyfirmata.util.Iterator(moottorit.kortti)
