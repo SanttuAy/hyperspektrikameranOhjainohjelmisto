@@ -1,33 +1,34 @@
+#!/usr/bin/env python3
 # -*- coding: latin-1 -*-
 
 """
 Created on Wed Jul  8 09:59:45 2020
-Askelmoottorin lineaarisiirtimen ohjainohjelmiston ensimmäinen versio.
+Askelmoottorin lineaarisiirtimen ohjainohjelmiston ensimmÃ¤inen versio.
 @author: Santtu
 """
 import sys # komentorivikutsut...
 import numpy as np # Numpy Array
-import pyfirmata # Arduinon käyttö
-import time # Arduinon käyttö
+import pyfirmata # Arduinon kÃ¤yttÃ¶
+import time # Arduinon kÃ¤yttÃ¶
 import serial #sarjaportti
 
 
 
 """ Luokka yhden moottorin tietojen hallinnointia varten. 
-    Luokka huolehtii yksittäisen moottorin tietojen (kytkennät, askelta 
+    Luokka huolehtii yksittÃ¤isen moottorin tietojen (kytkennät, askelta 
     kierroksella, rajakytkimet, sijainti) kokoamisesta ja ylläpidosta.
 """
 class Moottori:
     
     
-    """ Konstruktori. Parametrit: moottorin nimi (x, y tai z), arduinokytkennöistä
+    """ Konstruktori. Parametrit: moottorin nimi (x, y tai z), arduinokytkennÃ¶istÃ¤
         dirpin ja steppin, moottorin steps 
         per revolution -tieto ja moottorin akselin rajakytkimien pinnit Arduinossa - ensin 0-päädyn 
         kytkin, sitten toisen pään. """
     def __init__(self, nimi, dirPin, stepPin, askeltaKierroksella, rajakytkin_0, rajakytkin_1):
         self.nimi = nimi
         self.dirPin = dirPin
-        self.dirPin_Tila = 0 #False, vastapäivään  
+        self.dirPin_Tila = 0 #False, vastapäivään
         self.stepPin = stepPin
         self.askeltaKierroksella = askeltaKierroksella
         self.sijainti = 0
@@ -39,7 +40,7 @@ class Moottori:
         self.palaamassa = False
 
 
-    """ Suunta False (0, vastapäivään) tai True (1, myötäpäivään)"""
+    """ Suunta False (0, vastapÃ¤ivÃ¤Ã¤n) tai True (1, myötäpäivään)"""
     def setSuunta(self, suunta):
         self.dirPin_Tila = suunta
 
@@ -67,7 +68,7 @@ class Moottori:
 
 
     """ Askellaskurin toimintaan liittyvä setteri, jonka avulla tiedetään, tuleeko
-        askeleet plussata vai miinustaa kokonaismäärästä."""
+        askeleet plussata vai miinustaa kokonaismäärään."""
     def lahtee(self):
         self.palaamassa = False
         
@@ -80,7 +81,7 @@ class Moottori:
     """ Metodi jolla printataan konsoliin tieto siitä, miten kyseisen moottorin
         kytkennät on asetettu."""
     def printKytkennat(self):
-        print("{0}: dirpin: {1}, stepPin: {2}, askelta kierroksella: {3}, rajakytkin_0 pinnissä: {4}, rajakytkin_1 pinnissä: {5}".format(self.nimi, self.dirPin, self.stepPin, self.askeltaKierroksella, self.rajakytkin_0, self.rajakytkin_1))
+        print("{0}: dirpin: {1}, stepPin: {2}, askelta kierroksella: {3}, rajakytkin_0 pinnissÃ¤: {4}, rajakytkin_1 pinnissÃ¤: {5}".format(self.nimi, self.dirPin, self.stepPin, self.askeltaKierroksella, self.rajakytkin_0, self.rajakytkin_1))
 
 
     """ Metodi joka nollaa moottorin ohjaaman kelkan sijaintia laskevan 
@@ -94,7 +95,7 @@ class Moottori:
         self.sijainti += 1
 
 
-    """ Metodi jolla vähennetään askelia askelmittarista. Käytetään akselin 
+    """ Metodi jolla vähennetäänn askelia askelmittarista. Käytetään akselin 
         ääripäästä (jolloin x/y/z > 0) palatessa."""
     def vahennaSijaintia(self):
         self.sijainti -= 1
@@ -102,8 +103,8 @@ class Moottori:
     
     """ Metodi joka palauttaa askellaskurin lukeman moottorin ohjaaman kelkan 
         oletetusta sijainnista. Huom! Todellista sijaintia ei tiedetä. Laskelma kertoo
-        0-sijainnin rajakytkimeltä käskytettyjen askelten määrän, jotka otettu 
-        silloin kun salliLiike oli True."""
+        0-rajakytkimeltä käskytettyjen askelten määrän, jotka otettu 
+        silloin kun attribuutti salliLiike oli True."""
     def getSijainti(self):
         return self.sijainti
     
@@ -111,10 +112,10 @@ class Moottori:
         
 """ Luokka ohjaimen kolmen moottorin säilömistä sekä kortin ja portin 
     kytkentöjen määrittämistä varten. Oletetaan, että laitteistokokoonpanossa 
-    lähinnä usb-portin vaihtelulle saattaa tulla tarvetta (tällöinkin tulee 
+    usb-portin vaihtelulle saattaa tulla tarvetta (tällöinkin tulee 
     luoda kokonaan uusi moottorit-olio). Ohjaimen Arduinokokoonpano kolmen 
     moottorin kytkentöjen osalta toteutetaan 
-    kerroMoottorienKytkennät()-metodin kuvaamalla tavalla. Luokka
+    kerroMoottorienKytkennat()-metodin kuvaamalla tavalla. Luokka
     huolehtii rajakytkimien seurannasta ja moottorien liikuttelusta.
 """ 
 class Moottorit:
@@ -140,7 +141,7 @@ class Moottorit:
             
 
     """ Poista metodi jos turha, tein kytkinten tarkastusmetodin yksinkertaistamista
-        yrittäessäni. """
+        yrittÃ¤essÃ¤ni. """
     def getMoottori(self, moottorinNimi):
         if moottorinNimi == 'x':
             moottori = self.moottoriX
@@ -152,8 +153,8 @@ class Moottorit:
         return moottori
 
             
-    """ Metodi joka tarkistaa parametrissä nimetyn moottorin osalta, onko tultu
-        jommalle kummalle sen rajakytkimistä. Jos tullaan kytkimelle, asetetaan
+    """ Metodi joka tarkistaa parametrissÃ¤ nimetyn moottorin osalta, onko tultu
+        jommalle kummalle sen rajakytkimistÃ¤. Jos tullaan kytkimelle, asetetaan
         moottorin liikkumissuunta valmiiksi päinvastaiseksi."""
     def tarkistaKytkimet(self, moottorinNimi):
         if moottorinNimi == 'x':
@@ -170,13 +171,13 @@ class Moottorit:
           #      print("X: kytkin0: {0}, kytkin1: {1}".format(kytkimenTila0, kytkimenTila1))
                 if self.moottoriX.rajakytkin0_Tila == 1:
                     self.moottoriX.nollaaSijainti() #tultiin sijaintiin 0
-                    self.vaihdaSuunta(moottorinNimi) #rajakytkimellä käännyttävä
-                    self.moottoriX.lahtee() #laskuri tietää kasvattaa sijaintilukemaa
+                    self.vaihdaSuunta(moottorinNimi) #rajakytkimellÃ¤ kÃ¤Ã¤nnyttÃ¤vÃ¤
+                    self.moottoriX.lahtee() #laskuri tietÃ¤Ã¤ kasvattaa sijaintilukemaa
                     print("x tuli 0-kytkimelle")
                     self.moottoriX.estaLiike()
                 elif self.moottoriX.rajakytkin1_Tila == 1:
                     self.vaihdaSuunta(moottorinNimi)
-                    self.moottoriX.palaa() # laskuri tietää vähentää sijaintilukemaa
+                    self.moottoriX.palaa() # laskuri tietÃ¤Ã¤ vÃ¤hentÃ¤Ã¤ sijaintilukemaa
                     print("x tuli 1-kytkimelle")
                     self.moottoriX.estaLiike()
                 elif self.moottoriX.rajakytkin0_Tila == 0 and self.moottoriX.rajakytkin1_Tila == 0:
@@ -245,11 +246,11 @@ class Moottorit:
                     print("z:n rajakytkimien lukemisessa ongelmia")
         else: 
             print("Kytkimiä tarkastettaessa moottorin nimi oltava x, y tai z.")
-            # TODO: Heitä tässä poikkeus jolla pysäytetään myös liikuAskelta()-metodin suoritus
+            # TODO: HeitÃ¤ tÃ¤ssÃ¤ poikkeus jolla pysÃ¤ytetÃ¤Ã¤n myÃ¶s liikuAskelta()-metodin suoritus
 
 
-    """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärä. Jos
-    kesken matkan tullaan rajakytkimelle, moottori pystähtyy siihen, eikä käytä
+    """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärää. Jos
+    kesken matkan tullaan rajakytkimelle, moottori pystähtyy siihen, eikä käytä 
     jäljellä olevia askelia palaamiseen."""
     def liikuAskelta(self, moottorinNimi, montakoAskelta):
         if moottorinNimi == 'x':
@@ -281,7 +282,7 @@ class Moottorit:
 
 
     """ Metodi jolla asetetaan suunta halutun moottorin liikuttamista varten. 
-    Parametereinä moottorin nimi ja 1 tai 0, 
+    ParametereinÃ¤ moottorin nimi ja 1 tai 0, 
     missä 0= vastapäivään, 1= myötäpäivään."""
     def setSuunta(self, moottorinNimi, myotaVaiVasta):
 #        print("setSuunta sai suunta-arvoksi: ", myotaVaiVasta)
@@ -296,7 +297,7 @@ class Moottorit:
             dirPin = self.moottoriZ.dirPin
         else: print("Moottorin nimen tulee olla x, y tai z")
         if myotaVaiVasta == 0:
-            self.kortti.digital[dirPin].write(0) # LOW-arvolla vastapäivään
+            self.kortti.digital[dirPin].write(0) # LOW-arvolla vastapÃ¤ivÃ¤Ã¤n
             moottori.setSuunta(False)
         elif myotaVaiVasta == 1:
             self.kortti.digital[dirPin].write(1)
@@ -304,7 +305,7 @@ class Moottorit:
         else: print("SetSuunnan suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
 
 
-    """ Metodi jolla käyttäjä voi vaihtaa parametrinä annetun moottorin nykyisen 
+    """ Metodi jolla käyttäjä voi vaihtaa parametrina annetun moottorin nykyisen 
     liikkumasuunnan päinvastaiseksi."""
     def vaihdaSuunta(self, moottorinNimi):
         if moottorinNimi == 'x':
@@ -333,6 +334,7 @@ class Moottorit:
             moottori.vahennaSijaintia()
 
 
+#TODO: SIIRRÄ KUVAUKSIIN!
     """ Metodi kaikkien moottoreiden viimeisimmän sijaintitiedon palauttamista varten, 
         palauttaa Numpy arrayn."""
     def getSijainnit(self):
@@ -341,10 +343,10 @@ class Moottorit:
         return sijainti
 
 
-    """ Printtaa konsoliin käyttöön otetun portin nimen. 
+    """ Printtaa konsoliin käyttäjän otetun portin nimen. 
     Nimi löytyy esim. Arduinon kautta"""
     def printPortti(self):
-        print("Käytössä oleva portti:", self.portti)
+        print("KÃ¤ytÃ¶ssÃ¤ oleva portti:", self.portti)
     
     
     """ Metodi joka printtaa konsoliin kolmen mottorin kytkentätiedot sekä
@@ -358,55 +360,64 @@ class Moottorit:
         
 """
     Luokka kuvaustapahtuman hallintaa varten. Luokka käyttää moottorit-oliota
-    ja huolehtii yksittäistä kuvaustapahtumaa varten asetettavista tiedoista ja 
+    ja huolehtii yksittäisistä kuvaustapahtumaa varten asetettavista tiedoista ja 
     lokitiedoista.
 """        
 class Kuvaus:
     
-    """ Konstruktori. Parametrinä moottorit-olio. Lokitieto ei sisällä kaikkia 
-    kuvaus-olion sijaintitietoja, vaan "riitävän" määrän askeltietoja, jotta voidaan
-    päätellä, kummassako päässä kutakin akselia ollaan liikkumassa (ja mihin päin
-    oltiin menossa?)."""
+    """ Konstruktorit. Kuvaus-olio voidaan luoda joko oletusaloituskohdalla (0,0,0) 
+    tai osin tai kokonaan toisin määritellyllä aloituskohdalla."""
     def __init__(self, moottorit):
         self.moottorit = moottorit
-        self.aloituskohta = { #oletusaloituskohta on (x0, y0, z0)
-        "x" : 0, # (0, 0, 0)-sijainnissa rajakytkimet, joissa sijaitsee laskurien 0
-        "y" : 0, # erotetaan ääripään rajakytkimistä viimeisimmän lokitiedon perusteella?
-        "z" : 0 # vai kytkentätiedon?
+        self.sijainnit = { #oletusaloituskohta on (x0, y0, z0)
+        "x" : 0, 
+        "y_alku" : 0, 
+        "z" : 0,
+        "y_loppu" : 1000, #TODO: Määritä kehikkoon nähden sopiva oletusarvo y:lle lopetuskohtaa varten 
+        "x_siivu" : 5 #TODO: Määritä sopiva oletusarvo siivulle
         }
+ #       self.viimeisin = [self.sijainnit["x"], self.sijainnit["y_alku"], self.sijainnit["z"]]
 
-        self.loki = { # loki sijaintitiedoille
-            "alku" : (0,0,0)
-            }
-    
-#TODO: toteutus
-        """ Metodi lokitiedon lisäämiseksi. Lokiin kerätään X-määrä edeltäviä sijaintieja."""
-#    def lisaaLokiin(self):
+
+    """ Määriteltään aloituskohta uudelleen olion luomisen jälkeen."""
+    def setAloituskohta(self, x, y, z):    
+        self.sijainnit["x"] = x
+        self.sijainnit["y_alku"] = y
+        self.sijainnit["z"] = z
+        print('Kuvauksen aloituskohdaksi on määritetty (x{0}, y{1}, z{2})'.format(self.sijainnit["x"], self.sijainnit["y_alku"], self.sijainnit["z"]))
+
+
+    """ Määriteltään lopetuskohta uudelleen olion luomisen jälkeen."""
+    def setLopetuskohta(self, y):    
+        self.sijainnit["y_loppu"] = y
+        print('Kuvauksen lopetuskohdaksi on määritetty (x{0}, y{1}, z{2})'.format(self.sijainnit["x"], self.sijainnit["y_loppu"], self.sijainnit["z"]))
+
+
+    def zoomIn(z):
+        self.sijainnit["z"] += z
         
         
-    """ Kerrotaan aloituspisteen tiedot x, y ja z-akselin suhteen. """
-#def tellStartingPoint():
-#    #print('Aloituspisteeksi on asetettu x{0}, y{1}, z{2}'.format(alkukohtaX, alkukohtaY, alkukohtaZ))
-#tällä kävi ilmi etteivät alkukohtien arvot pysyneet uusissa arvoissa vaan palasivat nolliksi!
-#    print('Aloituspisteeksi on asetettu x{0}, y{1}, z{2}'.format(sijaintitiedot[0], sijaintitiedot[1], sijaintitiedot[2]))
-
-
-# MIHIN?
-    """ Alustetaan moottorille aloituskohta.
-    Parametrit: 
-    moottori: moottori jolle aloituspiste asetetaan
-    kohta: piste moottorin edustamalla akselilla, asetetaan aloituspisteeksi """
-    #def asetaAloituskohta(moottori, kohta):    
-#    if moottori in aloituskohta.keys():
-#        aloituskohta[moottori] = kohta
-#    else:
-#        print("Moottorivaihtoehdot ovat x, y ja z")
-
-
-
-#TODO: funktioiden kutsuminen komentoriviltä, vaatiiko plugin?
+    def zoomOut(z):
+        self.sijainnit["z"] -= z
+        
+        
+    def uusiSiivu(x):
+        self.sijainnit["x"] += x
+        
+        
+    #TODO: MUUTA NIIN ETTÄ KOKOAA MOOTTOREIDEN AJANTAISAISET SIJAINNIT  
+    """ Metodi kaikkien moottoreiden viimeisimmän sijaintitiedon palauttamista varten, 
+        palauttaa Numpy arrayn."""
+    def getViimeisin(self):
+#        sijainti = np.arange(3) #arange-funktio luo Numpy-arrayn
+        viimeisin = [self.sijainnit["x"], self.sijainnit["y_alku"], self.sijainnit["z"]]
+        sijainti = np.array([viimeisin[0], viimeisin[1], viimeisin[2]])        
+        return sijainti
+        
+        
+#TODO: funktioiden kutsuminen komentoriviltÃ¤, vaatiiko plugin?
 def main():
-    moottoriX = Moottori('x', 4, 3, 200, 2, 13) #KÄYTÄ NÄITÄ KUN KYTKIMIEN PINNIT TIEDOSSA
+    moottoriX = Moottori('x', 4, 3, 200, 2, 13) #KÃYTÃ NÃITÃ KUN KYTKIMIEN PINNIT TIEDOSSA
     moottoriY = Moottori('y', 10, 8, 200, 5, 6)
     moottoriZ = Moottori('z', 12, 11, 400, 7, 9)
  #   print(moottoriX.dirPin_Tila, moottoriX.rajakytkin0_Tila, moottoriX.rajakytkin1_Tila, moottoriX.voiLiikkua)
@@ -414,29 +425,34 @@ def main():
  #   print(moottoriX.voiLiikkua)
  #   try:
     moottorit = Moottorit('COM6', moottoriX, moottoriY, moottoriZ) # katso portti Arduinon kautta
+    kuvaus1 = Kuvaus(moottorit) #TÄHÄN ASTI EDETÄÄN KÄYNNISTETTÄESSÄ
+    kuvaus1.setAloituskohta(1, 2, 3) #KÄYTTÄJÄ:
+    kuvaus1.setLopetuskohta(800)
+    sijainti = kuvaus1.getViimeisin()
+    print(sijainti)
 #    moottorit.lueKytkimet('x')
 #    moottorit.lueKytkimet('y')
 #    moottorit.lueKytkimet('z')
 #    moottorit.printPortti()
 #    moottorit.printMoottorienKytkennat()
-    moottorit.setSuunta('x', 1)
-    moottorit.setSuunta('y', 1)
-    moottorit.setSuunta('z', 1)
+   # moottorit.setSuunta('x', 1)
+   # moottorit.setSuunta('y', 1)
+   # moottorit.setSuunta('z', 1)
  #   moottorit.setSuunta('z', 1)
 #    moottorit.setSuunta('x', 0)
-    moottorit.liikuAskelta('x', 400)
-    moottorit.liikuAskelta('y', 400)
-    moottorit.liikuAskelta('z', 800)
-    moottorit.liikuAskelta('x', 400)
-    moottorit.liikuAskelta('y', 400)
-    moottorit.liikuAskelta('z', 800)
-    moottorit.liikuAskelta('x', 400)
-    moottorit.liikuAskelta('y', 400)
-    moottorit.liikuAskelta('z', 800)
-    moottorit.kortti.exit()
+   # moottorit.liikuAskelta('x', 400)
+   # moottorit.liikuAskelta('y', 400)
+   # moottorit.liikuAskelta('z', 800)
+   # moottorit.liikuAskelta('x', 400)
+   # moottorit.liikuAskelta('y', 400)
+   # moottorit.liikuAskelta('z', 800)
+   # moottorit.liikuAskelta('x', 400)
+   # moottorit.liikuAskelta('y', 400)
+   # moottorit.liikuAskelta('z', 800)
+   # moottorit.kortti.exit()
  #   except serial.SerialException: #Aiheuttaa ongelmia viimeisille riveille???
- #       print("Ongelmia portin lukemisessa. Kytke kaapeli arduinon käyttämään porttiin."
- #tähän - myöhemmin kuvausolioon?
+ #       print("Ongelmia portin lukemisessa. Kytke kaapeli arduinon kÃ¤yttÃ¤mÃ¤Ã¤n porttiin."
+ #tÃ¤hÃ¤n - myÃ¶hemmin kuvausolioon?
 #    kuvaus = Kuvaus(moottorit)
 #    while True:
 #        it = pyfirmata.util.Iterator(moottorit.kortti)
@@ -447,7 +463,7 @@ def main():
 #        elif rajakytkin0_Tila == 0: # auki
 #            print("x voi liikkua.")
 #        else: 
-#            print("x-moottorin 0-kytkintä ei voitu lukea.  Kytkimen tila: {0}".format(rajakytkin0_Tila))
+#            print("x-moottorin 0-kytkintÃ¤ ei voitu lukea.  Kytkimen tila: {0}".format(rajakytkin0_Tila))
 if __name__ == "__main__":
     main()
         
