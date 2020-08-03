@@ -5,8 +5,8 @@ Created on Wed Jul  8 09:59:45 2020
 Askelmoottorin lineaarisiirtimen ohjainohjelmiston ensimmäinen versio.
 @author: Santtu
 """
-import sys # komentorivikutsut...
-import numpy as np # Numpy Array
+#import sys #tuleeko tarvetta
+import numpy as np # Numpy array
 import pyfirmata # Arduinon käyttö
 import time # Arduinon käyttö
 import serial #sarjaportti
@@ -124,7 +124,7 @@ class Moottorit:
         ja z-akseleilla kelkkaa liikuttelevat moottorit."""
     def __init__(self, portti, moottori_x, moottori_y, moottori_z):
             self.portti = portti
-            self.kortti = pyfirmata.Arduino(portti) #Arduino.AUTODETECT ei toiminut
+            self.kortti = pyfirmata.Arduino(portti) #Arduino.AUTODETECT ei tässä toiminut
             self.moottori_x = moottori_x
             self.moottori_y = moottori_y
             self.moottori_z = moottori_z 
@@ -156,13 +156,13 @@ class Moottorit:
           #      print("X: kytkin0: {0}, kytkin1: {1}".format(kytkimen_tila_0, kytkimen_tila_1))
                 if self.moottori_x.rajakytkin_0_tila == 1:
                     self.moottori_x.nollaa_sijainti() #tultiin sijaintiin 0
-                    self.vaihda_suunta(moottorin_nimi) #rajakytkimellÃ¤ kÃ¤Ã¤nnyttÃ¤vÃ¤
-                    self.moottori_x.lahtee() #laskuri tietÃ¤Ã¤ kasvattaa sijaintilukemaa
+                    self.vaihda_suunta(moottorin_nimi) #rajakytkimellä käännyttävä
+                    self.moottori_x.lahtee() #laskuri tietää kasvattaa sijaintilukemaa
                     print("x tuli 0-kytkimelle")
                     self.moottori_x.esta_liike()
                 elif self.moottori_x.rajakytkin_1_tila == 1:
                     self.vaihda_suunta(moottorin_nimi)
-                    self.moottori_x.palaa() # laskuri tietÃ¤Ã¤ vÃ¤hentÃ¤Ã¤ sijaintilukemaa
+                    self.moottori_x.palaa() # laskuri tietää vähentää sijaintilukemaa
                     print("x tuli 1-kytkimelle")
                     self.moottori_x.esta_liike()
                 elif self.moottori_x.rajakytkin_0_tila == 0 and self.moottori_x.rajakytkin_1_tila == 0:
@@ -184,7 +184,7 @@ class Moottorit:
                 self.moottori_y.set_rajakytkin_1_tila(kytkimen_tila_1)
             #    print("Y: kytkin0: {0}, kytkin1: {1}".format(kytkimen_tila_0, kytkimen_tila_1))
                 if self.moottori_y.rajakytkin_0_tila == 1:
-                    self.moottori_y.esta_liike() #OIKEAOPP. KÄYTTÄÄ STOP(MOOTTORIN_NIMI)??
+                    self.moottori_y.esta_liike()
                     self.moottori_y.nollaa_sijainti()
                     self.vaihda_suunta(moottorin_nimi)
                     self.moottori_y.lahtee()
@@ -234,6 +234,8 @@ class Moottorit:
             # moottorin_nimen oikeellisuus tarkistetaan jo ylempänä
 
 
+# Tämän ja skannaa_askelta-metodin rungot ovat toistaiseksi samat, ero vain nopeudessa.
+#TODO:tähän lisättävä myöhemmin kiihdytys ja pehmennys, mikäli askelia hukataan kameran painon kanssa.
     """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärää. Jos
     kesken matkan tullaan rajakytkimelle, moottori pystähtyy siihen, eikä käytä 
     jäljellä olevia askelia palaamiseen."""
@@ -291,7 +293,6 @@ class Moottorit:
         else: print("SetSuunnan suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
 
 
-#TODO: miten alun ja lopun "pehmennykset" toteutuvat?
     """ Metodi jolla käyttäjä voi vaihtaa parametrina annetun moottorin nykyisen 
     liikkumasuunnan päinvastaiseksi."""
     def vaihda_suunta(self, moottorin_nimi):
@@ -340,9 +341,9 @@ class Moottorit:
                 self.tarkista_kytkimet(moottorin_nimi)
                 if moottori.voi_liikkua == True:
                     self.kortti.digital[step_pin].write(1) 
-                    time.sleep(2000 * 10**(-6)) #TODO: Määritä riittävän hidas vauhti 
+                    time.sleep(4000 * 10**(-6)) #TODO: Määritä riittävän hidas vauhti 
                     self.kortti.digital[step_pin].write(0)
-                    time.sleep(2000 * 10**(-6))
+                    time.sleep(4000 * 10**(-6))
                     self.laskuri(moottori)
                 else: 
                     time.sleep(1) #??
@@ -438,6 +439,13 @@ class Kuvaus:
         self.moottorit.liiku_askelta('y', y)
         self.moottorit.liiku_askelta('z', z)  
         print("\n")
+ 
+    
+    def skannaa_askelta(self, x, y):
+        self.moottorit.skannaa_askelta('x', x)
+        self.moottorit.skannaa_askelta('y', y) #jätin tähän vielä mahdollisuuden y-suuntaiseenkin skannaamiseen
+        print("\n")
+    
     
     """ Metodi jolla vaihdetaan halutun moottorin liikkumissuunnta päinvastaiseksi. 
     Parametereinä moottorin nimi."""
@@ -495,33 +503,50 @@ class Kuvaus:
         print("\nVoit ohjata kelkkaa joko:\n siirry(x=int, y=int, z=int)\n vaihda_suunta(moottorin_nimi)\ntai määrittämällä alkupisteen, loppupisteen ja siirtymän leveyden:\n set_aloituskohta(x=int, y=int, z=int) --> sijainti laitetaan muistiin ja kelkka siirretään aloituskohtaan \nset_lopetuskohta(y=int) --> lopetuskohta laitetaan muistiin skannaamista varten\n skannaa() --> kelkkaa siirretään aloituskohdasta lopetuskohtaan tasaista vauhtia, minkä jälkeen palataan aloituskohtaan, siirrytään siirtymän verran oikealle ja skannataan uudestaan")
     
 def main():
+    #KÄYNNISTÄMISTOIMET:
     moottori_x = Moottori('x', 4, 3, 200, 2, 13)
     moottori_y = Moottori('y', 10, 8, 200, 5, 6)
     moottori_z = Moottori('z', 12, 11, 400, 7, 9)
     moottorit = Moottorit('COM6', moottori_x, moottori_y, moottori_z) # katso portti Arduinon kautta
-    kuvaus1 = Kuvaus(moottorit) #TÄHÄN ASTI EDETÄÄN OHJELMAA KÄYNNISTETTÄESSÄ
+    kuvaus1 = Kuvaus(moottorit)
 
     #KÄYTTÄJÄN TOIMIEN KOKEILUA:
     #kuvaus1.ohjeet()
 
-    #TAPA1:
+   # LIIKUTTELUN TAPA1:
+    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu
+    kuvaus1.siirry_askelta(200, 300, 100) # kaikkien moottoreiden liikuttelu
+    kuvaus1.vaihda_suunta('z')
+    kuvaus1.siirry_askelta(0, 0, 100)
+    sijaintitiedot = kuvaus1.sijainti()
+   #  print(sijaintitiedot)
+    kuvaus1.vaihda_suunta('x') 
+    kuvaus1.skannaa_askelta(400, 0)
+    sijaintitiedot = kuvaus1.sijainti()
+    print(sijaintitiedot)
+
+   # print(type(sijaintitiedot))
+
+
+    #TAPA2:
 #    kuvaus1.aloituskohta(200, 400, 200) 
 #    kuvaus1.lopetuskohta(800)
 #    kuvaus1.siirtyma(10)
 #    kuvaus1.skannaa_viipaletta(5)
 
-   # TAPA2:
-    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu
-    kuvaus1.siirry_askelta(20, 30, 60) # kaikkien moottoreiden liikuttelu
-    kuvaus1.vaihda_suunta('z')
-    kuvaus1.siirry_askelta(0, 0, 5)
-    sijaintitiedot = kuvaus1.sijainti()
-    print(sijaintitiedot)
-    kuvaus1.vaihda_suunta('x') 
-    kuvaus1.siirry_askelta(10, 0, 0)
-    sijaintitiedot = kuvaus1.sijainti()
-    print(sijaintitiedot)
-   # print(type(sijaintitiedot))
+
+#TÄMÄ SARJA VAIN MOOTTOREIDEN AJOITTAIN NYKVÄN LIIKKEEN TUTKIMISEKSI
+#    moottorit.liiku_askelta("x", 200)
+#    moottorit.vaihda_suunta("x")
+#    moottorit.skannaa_askelta("x", 200)
+
+#    moottorit.liiku_askelta("y", 200)
+#    moottorit.vaihda_suunta("y")
+#    moottorit.skannaa_askelta("y", 200)
+    
+#    moottorit.liiku_askelta("z", 400)
+#    moottorit.vaihda_suunta("z")    
+#    moottorit.skannaa_askelta("z", 400)
    
     kuvaus1.lopeta() #Toimii - tämän jälkeen ei voi liikutella
 if __name__ == "__main__":
