@@ -234,41 +234,6 @@ class Moottorit:
             # moottorin_nimen oikeellisuus tarkistetaan kutsuketjussa ylempänä
 
 
-# Tämän ja skannaa_askelta-metodin rungot ovat toistaiseksi samat, ero vain nopeudessa.
-#TODO:tähän lisättävä myöhemmin kiihdytys ja pehmennys, mikäli askelia hukataan kameran painon kanssa.
-    """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärää. Jos
-    kesken matkan tullaan rajakytkimelle, moottori pystähtyy siihen, eikä käytä 
-    jäljellä olevia askelia palaamiseen."""
-    def liiku_askelta(self, moottorin_nimi, montako_askelta):
-        if moottorin_nimi == 'x':
-            moottori = self.moottori_x
-            step_pin = self.moottori_x.step_pin           
-        elif moottorin_nimi == 'y':
-            step_pin = self.moottori_y.step_pin
-            moottori = self.moottori_y
-        elif moottorin_nimi == 'z':
-            step_pin = self.moottori_z.step_pin
-            moottori = self.moottori_z
-        else: print("Moottorin nimen tulee olla x, y tai z")
-        try:
-            for i in range(montako_askelta):
-                self.tarkista_kytkimet(moottorin_nimi)
-                if moottori.voi_liikkua == True:
-                    self.kortti.digital[step_pin].write(1) 
-                    time.sleep(500 * 10**(-6)) # nopea liike
-                    self.kortti.digital[step_pin].write(0)
-                    time.sleep(500 * 10**(-6))
-                    self.laskuri(moottori)
-                else: 
-                  #  print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorin_nimi))
-                    time.sleep(1) #??
-                    break
-        except serial.SerialTimeoutException:
-            print("USB-yhteys katkesi")
-        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottorin_nimi, moottori.sijainti))
-        moottori.salli_liike()
-
-
     """ Metodi jolla asetetaan suunta halutun moottorin liikuttamista varten. 
     Parametereinä moottorin nimi ja 1 tai 0, 
     missä 0= vastapäivään, 1= myötäpäivään."""
@@ -331,19 +296,49 @@ class Moottorit:
             print("Suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
 
 
-    """ Metodi jolla liikutetaan x- tai y-moottoria asetettu askelmäärää hitaammin
-    kuin liiku_askelta()-metodilla."""
-    def skannaa_askelta(self, moottorin_nimi, montako_askelta, nopeus):
+#TODO:tähän lisättävä myöhemmin kiihdytys ja pehmennys, mikäli askelia hukataan kameran painon kanssa.
+    """ Metodi jolla liikutetaan valittua moottoria asetettu askelmäärää. Jos
+    kesken matkan tullaan rajakytkimelle, moottori pystähtyy siihen, eikä käytä 
+    jäljellä olevia askelia palaamiseen."""
+    def liiku_askelta(self, moottorin_nimi, montako_askelta):
         if moottorin_nimi == 'x':
             moottori = self.moottori_x
             step_pin = self.moottori_x.step_pin           
         elif moottorin_nimi == 'y':
             step_pin = self.moottori_y.step_pin
             moottori = self.moottori_y
-        else: print("Moottorin nimen tulee olla x tai y")
+        elif moottorin_nimi == 'z':
+            step_pin = self.moottori_z.step_pin
+            moottori = self.moottori_z
+        else: print("Moottorin nimen tulee olla x, y tai z")
         try:
             for i in range(montako_askelta):
                 self.tarkista_kytkimet(moottorin_nimi)
+                if moottori.voi_liikkua == True:
+                    self.kortti.digital[step_pin].write(1) 
+                    time.sleep(500 * 10**(-6)) # nopea liike
+                    self.kortti.digital[step_pin].write(0)
+                    time.sleep(500 * 10**(-6))
+                    self.laskuri(moottori)
+                else: 
+                  #  print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorin_nimi))
+                    time.sleep(1) #??
+                    break
+        except serial.SerialTimeoutException:
+            print("USB-yhteys katkesi")
+        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottorin_nimi, moottori.sijainti))
+        moottori.salli_liike()
+
+
+    """ Metodi jolla liikutetaan y-moottoria asetettu askelmäärää hitaammin
+    kuin liiku_askelta()-metodilla. Tähän olisi tarkoitus määrittää testaamalla 
+    "turvalliseksi" todettu nopeus"""
+    def skannaa_askelta(self, montako_askelta):
+        step_pin = self.moottori_y.step_pin
+        moottori = self.moottori_y
+        try:
+            for i in range(montako_askelta):
+                self.tarkista_kytkimet(moottori.nimi) #tarvitaanko getteri?
                 if moottori.voi_liikkua == True:
                     self.kortti.digital[step_pin].write(1) 
                     time.sleep(4000 * 10**(-6)) #TODO: Määritä riittävän hidas vauhti 
@@ -352,27 +347,22 @@ class Moottorit:
                     self.laskuri(moottori)
                 else: 
                     time.sleep(1) #??
-                    print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorin_nimi))
+                    print("y-moottori ei voi liikkua enempää tähän suuntaan.")
                     break
         except serial.SerialTimeoutException:
             print("USB-yhteys katkesi")
-        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottorin_nimi, moottori.sijainti))
+        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottori.nimi, moottori.sijainti))
         moottori.salli_liike()
 
 
-    """x- tai y-moottorin liikutteluun käyttäjän haluamalla nopeudella. Muuten käytännössä sama kuin yllä.
+    """y-moottorin liikutteluun käyttäjän haluamalla nopeudella. Muuten käytännössä sama kuin yllä.
     Nopeuds-parametri: esim 500 nopeampi kuin 4000"""
-    def skannaa_askelta_nopeudella(self,moottorin_nimi, montako_askelta, nopeus):
-        if moottorin_nimi == 'x':
-            moottori = self.moottori_x
-            step_pin = self.moottori_x.step_pin           
-        elif moottorin_nimi == 'y':
-            step_pin = self.moottori_y.step_pin
-            moottori = self.moottori_y
-        else: print("Moottorin nimen tulee olla x tai y")
+    def skannaa_askelta_nopeudella(self, askeleet, nopeus):
+        step_pin = self.moottori_y.step_pin
+        moottori = self.moottori_y
         try:
-            for i in range(montako_askelta):
-                self.tarkista_kytkimet(moottorin_nimi)
+            for i in range(askeleet):
+                self.tarkista_kytkimet(moottori.nimi) #tarvitaanko getteri?
                 if moottori.voi_liikkua == True:
                     self.kortti.digital[step_pin].write(1) 
                     time.sleep(nopeus * 10**(-6)) #TODO: Määritä riittävän hidas vauhti 
@@ -381,11 +371,11 @@ class Moottorit:
                     self.laskuri(moottori)
                 else: 
                     time.sleep(1) #??
-                    print("Moottori {0} ei voi liikkua enempää tähän suuntaan.".format(moottorin_nimi))
+                    print("Y-moottori ei voi liikkua enempää tähän suuntaan.")
                     break
         except serial.SerialTimeoutException:
             print("USB-yhteys katkesi")
-        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottorin_nimi, moottori.sijainti))
+        print('Moottori {0}:n sijainti on nyt {1}.'.format(moottori.nimi, moottori.sijainti))
         moottori.salli_liike()
 
 
@@ -475,9 +465,8 @@ class Kuvaus:
         print("\n")
  
     
-    def skannaa_askelta(self, x, y):
-        self.moottorit.skannaa_askelta('x', x) #jätin tähän vielä mahdollisuuden x-suuntaiseenkin skannaamiseen
-        self.moottorit.skannaa_askelta('y', y) 
+    def skannaa_askelta(self, askeleet):
+        self.moottorit.skannaa_askelta(askeleet) 
         print("\n")
         
         
@@ -487,9 +476,8 @@ class Kuvaus:
         määrittelyssä käytettyä kerrointa. Parametrit: x: x-moottorin liikuttelun askelmäärä,
         y: y-moottorin liikuttelun askelmäärä, nopeus_x: millä nopeudella x-moottoria liikutellaan
         nopeus_y: millä nopeudella liikutellaan"""
-    def skannaa_askelta_nopeudella(self, x, y, nopeus_x, nopeus_y):
-        self.moottorit.skannaa_askelta_nopeudella('x', x, nopeus_x) #jätin tähän vielä mahdollisuuden x-suuntaiseenkin skannaamiseen
-        self.moottorit.skannaa_askelta_nopeudella('y', y, nopeus_y) 
+    def skannaa_askelta_nopeudella(self, askeleet, nopeus):
+        self.moottorit.skannaa_askelta_nopeudella(askeleet, nopeus) 
         print("\n")
 
     
@@ -522,7 +510,7 @@ class Kuvaus:
         y_liikuttava_matka = self.maaritykset['y_loppu'] - self.maaritykset['y_alku']
         for viipaleet in range(viipaleiden_maara):
             print("Skannataan...")
-            self.moottorit.skannaa_askelta('y', y_liikuttava_matka) #liikutaan hitaasti y:n suhteen aloituspisteestä lopetuspisteeseen
+            self.moottorit.skannaa_askelta(y_liikuttava_matka) #liikutaan hitaasti y:n suhteen aloituspisteestä lopetuspisteeseen
             self.vaihda_suunta("y") #paluuta varten
             print("Takaisin aloistuskohtaan...")
             self.siirry_askelta(0, self.maaritykset["y_alku"], 0) #palataan aloituspisteeseen
@@ -562,19 +550,19 @@ def main():
     #kuvaus1.ohjeet()
 
    # LIIKUTTELUN TAPA1:
-    kuvaus1.skannaa_askelta_nopeudella(200, 0, 100, 0) #liikutaanx:llä nopeasti, 
-    kuvaus1.skannaa_askelta_nopeudella(0, 200, 0, 10000) #liikutaan y:llä hitaasti
-#    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu, vastap
-#    kuvaus1.siirry_askelta(200, 300, 100) # kaikkien moottoreiden liikuttelu, vastap
-#    kuvaus1.siirry_askelta(0, 0, 400) # vastap.
+    kuvaus1.skannaa_askelta_nopeudella(200, 100) # nopeasti, 
+    kuvaus1.skannaa_askelta_nopeudella(200, 10000) # hitaasti
+#    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu
+#    kuvaus1.siirry_askelta(200, 300, 100) # kaikkien moottoreiden liikuttelu
+#    kuvaus1.siirry_askelta(0, 0, 400)
 #    kuvaus1.vaihda_suunta("z")
-#    kuvaus1.siirry_askelta(0, 0, 400) #myötäp.
+#    kuvaus1.siirry_askelta(0, 0, 400)
    # sijaintitiedot = kuvaus1.sijainti()
    #  print(sijaintitiedot)
 #    kuvaus1.vaihda_suunta("x") 
-#    kuvaus1.skannaa_askelta(400, 0) #vastap
+#    kuvaus1.siirry_askelta(400, 0, 0)
 #    kuvaus1.vaihda_suunta("y") 
-#    kuvaus1.skannaa_askelta(0, 400) #vastap
+#    kuvaus1.skannaa_askelta(400) #vastap
  #   sijaintitiedot = kuvaus1.sijainti()
  #   print(sijaintitiedot)
 
@@ -587,21 +575,6 @@ def main():
 #    kuvaus1.siirtyma(10)
 #    kuvaus1.skannaa_viipaletta(5)
 
-
-#TÄMÄ SARJA VAIN MOOTTOREIDEN AJOITTAIN NYKVÄN LIIKKEEN TUTKIMISEKSI
-#    moottorit.liiku_askelta("x", 200)
-#    moottorit.vaihda_suunta("x")
-#    moottorit.skannaa_askelta("x", 200)
-
-#    moottorit.liiku_askelta("y", 200)
-#    print(moottori_y.dir_pin_tila)
-#    moottorit.vaihda_suunta("y")
-#    print(moottori_y.dir_pin_tila)
-#    moottorit.skannaa_askelta("y", 200)
-    
-#    moottorit.liiku_askelta("z", 400)
-#    moottorit.vaihda_suunta("z")    
-#    moottorit.skannaa_askelta("z", 400)
    
     kuvaus1.lopeta() #Toimii - tämän jälkeen ei voi liikutella
 if __name__ == "__main__":
