@@ -231,7 +231,7 @@ class Moottorit:
                     print("z:n rajakytkimien lukemisessa ongelmia")
         else: 
             print("Tarkista tarkista_kytkimet()-kutsun oikeellisuus.")
-            # moottorin_nimen oikeellisuus tarkistetaan jo ylempänä
+            # moottorin_nimen oikeellisuus tarkistetaan kutsuketjussa ylempänä
 
 
 # Tämän ja skannaa_askelta-metodin rungot ovat toistaiseksi samat, ero vain nopeudessa.
@@ -255,7 +255,7 @@ class Moottorit:
                 self.tarkista_kytkimet(moottorin_nimi)
                 if moottori.voi_liikkua == True:
                     self.kortti.digital[step_pin].write(1) 
-                    time.sleep(500 * 10**(-6)) # hidas liike. Nopean kerroin esim.500
+                    time.sleep(500 * 10**(-6)) # nopea liike
                     self.kortti.digital[step_pin].write(0)
                     time.sleep(500 * 10**(-6))
                     self.laskuri(moottori)
@@ -285,16 +285,22 @@ class Moottorit:
             dir_pin = self.moottori_z.dir_pin
         else: print("Moottorin nimen tulee olla x, y tai z")
         if myota_vai_vasta == 0:
-            self.kortti.digital[dir_pin].write(0) # LOW-arvolla vastapÃ¤ivÃ¤Ã¤n
-            moottori.set_suunta(False)
+            self.kortti.digital[dir_pin].write(0) # LOW-arvolla vastapäivään
+            moottori.set_suunta(0)
+            if moottori.palaamassa == True: 
+                moottori.lahtee() #TÄMÄ IFFITTELY ON TURHA, KUNHAN TIEDETÄÄN, KUMPI SUUNTA MERKITSEE PALAAMISTA
+            else: moottori.palaa() #...turha kun tiedetään...
         elif myota_vai_vasta == 1:
             self.kortti.digital[dir_pin].write(1)
-            moottori.set_suunta(True)
-        else: print("SetSuunnan suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
+            moottori.set_suunta(1)
+            if moottori.palaamassa == True: 
+                moottori.lahtee() #TÄMÄ IFFITTELY ON TURHA, KUNHAN TIEDETÄÄN, KUMPI SUUNTA MERKITSEE PALAAMISTA
+            else: moottori.palaa() #...turha kun tiedetään...
+        else: print("Suunnan suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
 
 
-    """ Metodi jolla käyttäjä voi vaihtaa parametrina annetun moottorin nykyisen 
-    liikkumasuunnan päinvastaiseksi."""
+    """ Metodi jolla vaihdetaan parametrina annetun moottorin nykyinen 
+    liikkumasuunta päinvastaiseksi."""
     def vaihda_suunta(self, moottorin_nimi):
         if moottorin_nimi == 'x':
             moottori = self.moottori_x
@@ -309,17 +315,19 @@ class Moottorit:
         if moottori.dir_pin_tila == 0:
             self.kortti.digital[dir_pin].write(1)
             time.sleep(1)
+            moottori.set_suunta(1)
             if moottori.palaamassa == True:
-                moottori.palaamassa = False
-            else: moottori.palaamassa = True
+                moottori.lahtee()
+            else: moottori.palaa()
         elif moottori.dir_pin_tila == 1:
             self.kortti.digital[dir_pin].write(0)
             time.sleep(1)
+            moottori.set_suunta(0)
             if moottori.palaamassa == True:
-                moottori.palaamassa = False
-            else: moottori.palaamassa = True
+                moottori.lahtee()
+            else: moottori.palaa()
         else: 
-            print("vaihda_suunta() dir_pin: ", dir_pin) #TARKISTUKSEEN
+            print("vaihda_suunta() dir_pin: ", dir_pin) # KOODIN TESTAILUUN
             print("Suunta-arvoksi tulee antaa 0 (vastapäivään) tai 1 (myötäpäivään)")
 
 
@@ -404,11 +412,11 @@ class Kuvaus:
         self.moottorit.set_suunta('y', 1)
         self.moottorit.set_suunta('z', 1) # eli ne joilla kelkka siiretään 0-sijaintiin
         self.maaritykset = {
-        "x" : 0, 
-        "y_alku" : 0, 
-        "z" : 0,
-        "y_loppu" : 1000, #TODO: Määritä kehikkoon nähden sopiva oletusarvo y:lle lopetuskohtaa varten 
-        "x_siirtyma" : 5 #TODO: Määritä sopiva oletusarvo siirtymälle
+            "x" : 0, 
+            "y_alku" : 0, 
+            "z" : 0,
+            "y_loppu" : 1000, #TODO: Määritä kehikkoon nähden sopiva oletusarvo y:lle lopetuskohtaa varten 
+            "x_siirtyma" : 5 #TODO: Määritä sopiva oletusarvo siirtymälle
         }
         self.alkuun(moottorit)
         print("\nJärjestelmä on valmiina. Ohjeita liikutteluun: kuvaus.ohjeet()\n")
@@ -430,7 +438,7 @@ class Kuvaus:
         self.maaritykset["y_alku"] = y
         self.maaritykset["z"] = z
         print('Kuvauksen aloituskohdaksi on määritetty (x{0}, y{1}, z{2})'.format(self.maaritykset["x"], self.maaritykset["y_alku"], self.maaritykset["z"]))
-        self.siirry(x, y, z)#TODO:Tarpeeksi isot luvut jotta tullaan varmasti 0:aan? z tuplana!
+        self.siirry_askelta(x, y, z)#TODO:Tarpeeksi isot luvut jotta tullaan varmasti 0:aan? z tuplana!
 
 
     """Liikutetaan nimettyä moottoria haluttu askelmäärä."""
@@ -442,8 +450,8 @@ class Kuvaus:
  
     
     def skannaa_askelta(self, x, y):
-        self.moottorit.skannaa_askelta('x', x)
-        self.moottorit.skannaa_askelta('y', y) #jätin tähän vielä mahdollisuuden y-suuntaiseenkin skannaamiseen
+        self.moottorit.skannaa_askelta('x', x) #jätin tähän vielä mahdollisuuden x-suuntaiseenkin skannaamiseen
+        self.moottorit.skannaa_askelta('y', y) 
         print("\n")
     
     
@@ -496,7 +504,7 @@ class Kuvaus:
     
     """Sarjaportin sulkeminen lopuksi."""
     def lopeta(self):
-        self.moottorit.lopeta() #ei toimi?
+        self.moottorit.lopeta() 
         
         
     def ohjeet(self):
@@ -509,30 +517,35 @@ def main():
     moottori_z = Moottori('z', 12, 11, 400, 7, 9)
     moottorit = Moottorit('COM6', moottori_x, moottori_y, moottori_z) # katso portti Arduinon kautta
     kuvaus1 = Kuvaus(moottorit)
+    
+
 
     #KÄYTTÄJÄN TOIMIEN KOKEILUA:
     #kuvaus1.ohjeet()
 
    # LIIKUTTELUN TAPA1:
-    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu
-    kuvaus1.siirry_askelta(200, 300, 100) # kaikkien moottoreiden liikuttelu
-    kuvaus1.vaihda_suunta('z')
-    kuvaus1.siirry_askelta(0, 0, 100)
-    sijaintitiedot = kuvaus1.sijainti()
+#    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu, vastap
+#    kuvaus1.siirry_askelta(200, 300, 100) # kaikkien moottoreiden liikuttelu, vastap
+#    kuvaus1.siirry_askelta(0, 0, 400) # vastap.
+#    kuvaus1.vaihda_suunta("z")
+#    kuvaus1.siirry_askelta(0, 0, 400) #myötäp.
+   # sijaintitiedot = kuvaus1.sijainti()
    #  print(sijaintitiedot)
-    kuvaus1.vaihda_suunta('x') 
-    kuvaus1.skannaa_askelta(400, 0)
-    sijaintitiedot = kuvaus1.sijainti()
-    print(sijaintitiedot)
+#    kuvaus1.vaihda_suunta("x") 
+#    kuvaus1.skannaa_askelta(400, 0) #vastap
+#    kuvaus1.vaihda_suunta("y") 
+#    kuvaus1.skannaa_askelta(0, 400) #vastap
+ #   sijaintitiedot = kuvaus1.sijainti()
+ #   print(sijaintitiedot)
 
    # print(type(sijaintitiedot))
 
 
     #TAPA2:
-#    kuvaus1.aloituskohta(200, 400, 200) 
-#    kuvaus1.lopetuskohta(800)
-#    kuvaus1.siirtyma(10)
-#    kuvaus1.skannaa_viipaletta(5)
+    kuvaus1.aloituskohta(200, 400, 200) 
+    kuvaus1.lopetuskohta(800)
+    kuvaus1.siirtyma(10)
+    kuvaus1.skannaa_viipaletta(5)
 
 
 #TÄMÄ SARJA VAIN MOOTTOREIDEN AJOITTAIN NYKVÄN LIIKKEEN TUTKIMISEKSI
@@ -541,7 +554,9 @@ def main():
 #    moottorit.skannaa_askelta("x", 200)
 
 #    moottorit.liiku_askelta("y", 200)
+#    print(moottori_y.dir_pin_tila)
 #    moottorit.vaihda_suunta("y")
+#    print(moottori_y.dir_pin_tila)
 #    moottorit.skannaa_askelta("y", 200)
     
 #    moottorit.liiku_askelta("z", 400)
