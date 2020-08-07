@@ -470,12 +470,11 @@ class Kuvaus:
         print("\n")
         
         
-        #TODO: voiko x-moottoriin liittyvät vaihtoehdot poistaa?
-    """ skannataan x ja/tai y suuntaisesti annetulla nopeudella. Nopeus-parametri 
+    """ skannataan y-suuntaisesti annetulla nopeudella. Nopeus-parametri 
         tarkoittaa tässä moottorin liikuttelussa annettujen LOW-HIGH-impulssien välisen ajan
-        määrittelyssä käytettyä kerrointa. Parametrit: x: x-moottorin liikuttelun askelmäärä,
-        y: y-moottorin liikuttelun askelmäärä, nopeus_x: millä nopeudella x-moottoria liikutellaan
-        nopeus_y: millä nopeudella liikutellaan"""
+        määrittelyssä käytettyä kerrointa. 
+        Parametrit: askeleet: y-moottorin liikuttelun askelmäärä, 
+        nopeus: millä nopeudella liikutellaan"""
     def skannaa_askelta_nopeudella(self, askeleet, nopeus):
         self.moottorit.skannaa_askelta_nopeudella(askeleet, nopeus) 
         print("\n")
@@ -550,8 +549,8 @@ def main():
     #kuvaus1.ohjeet()
 
    # LIIKUTTELUN TAPA1:
-    kuvaus1.skannaa_askelta_nopeudella(200, 100) # nopeasti, 
-    kuvaus1.skannaa_askelta_nopeudella(200, 10000) # hitaasti
+ #   kuvaus1.skannaa_askelta_nopeudella(200, 100) # nopeasti, vastap.
+ #   kuvaus1.skannaa_askelta_nopeudella(200, 10000) # hitaasti, vastap.
 #    kuvaus1.siirry_askelta(0, 400, 0) # yhden moottorin liikuttelu
 #    kuvaus1.siirry_askelta(200, 300, 100) # kaikkien moottoreiden liikuttelu
 #    kuvaus1.siirry_askelta(0, 0, 400)
@@ -561,19 +560,19 @@ def main():
    #  print(sijaintitiedot)
 #    kuvaus1.vaihda_suunta("x") 
 #    kuvaus1.siirry_askelta(400, 0, 0)
-#    kuvaus1.vaihda_suunta("y") 
-#    kuvaus1.skannaa_askelta(400) #vastap
+ #   kuvaus1.vaihda_suunta("y") 
+ #   kuvaus1.skannaa_askelta(400) #vastap, myötäp.
  #   sijaintitiedot = kuvaus1.sijainti()
- #   print(sijaintitiedot)
+ #   print(sijaintitiedot) #odotus: (0,0,0)
 
    # print(type(sijaintitiedot))
 
 
     #TAPA2:
-#    kuvaus1.aloituskohta(200, 400, 200) 
-#    kuvaus1.lopetuskohta(800)
-#    kuvaus1.siirtyma(10)
-#    kuvaus1.skannaa_viipaletta(5)
+    kuvaus1.aloituskohta(200, 400, 200) 
+    kuvaus1.lopetuskohta(800)
+    kuvaus1.siirtyma(10)
+    kuvaus1.skannaa_viipaletta(5)
 
    
     kuvaus1.lopeta() #Toimii - tämän jälkeen ei voi liikutella
