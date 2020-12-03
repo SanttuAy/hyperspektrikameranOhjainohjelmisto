@@ -773,7 +773,7 @@ class Ohjain:
               ".aloituskohta(x=int, y=int, z=int) \n --> sijainti" + \
               " laitetaan muistiin JA kelkka siirretään aloituskohtaan\n" + \
               " .lopetuskohta(y=int)\n --> lopetuskohta laitetaan " + \
-              "muistiin ja käytetään skannatessa\n siirtyma(x=int) \n -->" + \
+              "muistiin ja käytetään skannatessa\n .siirtyma(x=int) \n -->" + \
               "n\ siirtymän leveys laitetaan muistiin ja käytetään " + \
               "skannatessa \n .skannaa_viipaletta_" + \
               "nopeudella(montako=int, nopeuskerroin)\n --> kelkkaa " + \
