@@ -794,12 +794,7 @@ class Ohjain:
               "52.3cm = 51705 askelta\nPuoliväli: 26.15 cm = 25853 " + \
               "askelta\n10cm = 9886 askelta\n1cm = 989 askelta\nZ\nKoko" + \
               " väli: 11cm = 14 514 askelta\nPuoliväli: 5,5cm = 7 257  " + \
-              "askelta\n10cm = 13 195 askelta\n1cm = 1 319 askelta\n" + \
-              "Kun määrität aloituskohtaa, lopetuskohtaa ja siivun " + \
-              "paksuutta kohteen mittojen perusteella, muista vähentää " + \
-              "kokonaismittojen edellyttämistä askelmääristä ensin 540 " + \
-              "askelta! Sijainti 0,0,0 on todellisuudessa irrottauduttu " + \
-              "540 askelta rajakytkimiltä.")
+              "askelta\n10cm = 13 195 askelta\n1cm = 1 319 askelta\n")
         
         
 def main():
