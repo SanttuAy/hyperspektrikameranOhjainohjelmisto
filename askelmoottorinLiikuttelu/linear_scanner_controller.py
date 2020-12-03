@@ -766,7 +766,7 @@ class Ohjain:
         """
         print("\nVoit ohjata kelkkaa vapaasti (esim. alkumääritysten" + \
               " tekemiseksi) funktioilla:\n .skannaa_askelta_nopeudella" + \
-              "(askeleet=int, nopeus=int)\n .siirry(x_askeleet=int, " + \
+              "(askeleet=int, nopeus)\n .siirry(x_askeleet=int, " + \
               "y_askeleet=int, z_askeleet=int)\n .vaihda_suunta(" + \
               "moottorin_nimi=string)\nSkannaamista varten määritä " + \
               "alkupiste, loppupiste ja siirtymän leveys askelina:\n ." + \
@@ -774,7 +774,7 @@ class Ohjain:
               " laitetaan muistiin JA kelkka siirretään aloituskohtaan\n" + \
               " .set_lopetuskohta(y=int)\n --> lopetuskohta laitetaan " + \
               "muistiin ja käytetään skannatessa\n .skannaa_viipaletta_" + \
-              "nopeudella(montako=int, nopeuskerroin=int)\n --> kelkkaa " + \
+              "nopeudella(montako=int, nopeuskerroin)\n --> kelkkaa " + \
               "siirretään aloituskohdasta lopetuskohtaan tasaista " + \
               "vauhtia, minkä jälkeen palataan aloituskohtaan, siirrytään" + \
               " siirtymän verran oikealle ja skannataan uudestaan.")
