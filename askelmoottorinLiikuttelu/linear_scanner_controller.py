@@ -505,7 +505,7 @@ class Moottorit:
                 ])        
         return sijainti
 
-    #POIS jos ei käyttöä!
+
     def nollaa_sijainnit(self):
         """
         Sets the location information of the three motors (0, 0, 0). Used only 
@@ -770,10 +770,12 @@ class Ohjain:
               "y_askeleet=int, z_askeleet=int)\n .vaihda_suunta(" + \
               "moottorin_nimi=string)\nSkannaamista varten määritä " + \
               "alkupiste, loppupiste ja siirtymän leveys askelina:\n ." + \
-              "set_aloituskohta(x=int, y=int, z=int) \n --> sijainti" + \
+              ".aloituskohta(x=int, y=int, z=int) \n --> sijainti" + \
               " laitetaan muistiin JA kelkka siirretään aloituskohtaan\n" + \
-              " .set_lopetuskohta(y=int)\n --> lopetuskohta laitetaan " + \
-              "muistiin ja käytetään skannatessa\n .skannaa_viipaletta_" + \
+              " .lopetuskohta(y=int)\n --> lopetuskohta laitetaan " + \
+              "muistiin ja käytetään skannatessa\n siirtyma(x=int) \n -->" + \
+              "n\ siirtymän leveys laitetaan muistiin ja käytetään " + \
+              "skannatessa \n .skannaa_viipaletta_" + \
               "nopeudella(montako=int, nopeuskerroin)\n --> kelkkaa " + \
               "siirretään aloituskohdasta lopetuskohtaan tasaista " + \
               "vauhtia, minkä jälkeen palataan aloituskohtaan, siirrytään" + \
