@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 """
 Spyder Editor
 
@@ -288,7 +288,7 @@ class Moottorit:
                 if nonelaskuri == 100:
                     print("Rajakytkimen pinnin lukeminen epäonnistui." + \
                           "Käynnistä ohjain uudelleen.")
-                    self.moottori.esta_liike()
+                    moottori.esta_liike()
                     return
             except serial.SerialTimeoutException:
                 print("USB-yhteys katkesi")
@@ -800,46 +800,55 @@ class Ohjain:
         
         
 def main():
-    #KÄYNNISTÄMISTOIMET:
+    #KÄYNNISTÄMISTOIMET - älä poista näitä:
     moottori_x = Moottori('x', 30, 32, 200, 5, 13) 
     moottori_y = Moottori('y', 26, 28, 200, 8, 6) 
     moottori_z = Moottori('z', 22, 24, 400, 7, 9) 
-    moottorit = Moottorit('COM7', moottori_x, moottori_y, moottori_z) 
+    moottorit = Moottorit('COM7', moottori_x, moottori_y, moottori_z) #korjaa jos portti vaihtuu 
     ohjain = Ohjain(moottorit) # nämä oltava valmiina, kajotaan vain jos 
                                 # kytkentöihin tulee muutoksia)
 
-    #KÄYTTÄJÄN TOIMIEN KOKEILUA - - - - - - - - - - - - - - - - - - - - - -
+    #KÄYTTÄJÄLLE - - - - - - - - - - - - - - - - - - - - - -
 #    ohjain.ohjeet()
 #    ohjain.mitat()
     
-        #LIIKUTTELUN TAPA1, ERIT. ALKUVALMISTELUIHIN:
- #   ohjain.skannaa_askelta_nopeudella(200, 100) # hidas
- #   ohjain.skannaa_askelta_nopeudella(2000, 4) # nopea
-  #  ohjain.siirry_askelta(90000, 70000, 20000) # kelkka alustuksen jälkeen 
-                                              # toiseen ääreen
- #   ohjain.siirry_askelta(0, 70000, 0) # yhden moottorin liikuttelut...
- #   ohjain.siirry_askelta(20000, 0, 0) 
- #   ohjain.siirry_askelta(0, 0, 400)
-#    ohjain.vaihda_suunta("z")
+    #LIIKUTTELUN TAPA1, ERIT. ALKUVALMISTELUIHIN.
+    #ESIMERKKEJÄ LIIKUTTELUKÄSKYISTÄ:
+ #   ohjain.skannaa_askelta_nopeudella(800, 200) # liikutaan vain y-suunnnassa, hidas
+ #   ohjain.skannaa_askelta_nopeudella(800, 4) # , vain y, nopeampi
+ 
+ #   ohjain.siirry_askelta(0, 700, 0) # yhden moottorin (y) liikuttelut...
+ #   ohjain.siirry_askelta(900, 0, 0) # ...nyt liikutetaan vain x-suunnassa
+ #   ohjain.siirry_askelta(0, 0, 400) # ...vain z-suunnassa
+ #   ohjain.siirry_askelta(900, 700, 400) # edelliset käskyt kerralla
+ 
+#    ohjain.vaihda_suunta("z") # vaihdetaan z:n suunta päinvastaiseksi
 #    ohjain.siirry_askelta(0, 0, 400)
+ 
  #   sijaintitiedot = ohjain.sijainti()
  #   print(sijaintitiedot)
+ 
 #    ohjain.vaihda_suunta("x") 
 #    ohjain.siirry_askelta(400, 0, 0)
  #   ohjain.vaihda_suunta("y") 
- #   ohjain.skannaa_askelta_nopeudella(400, 200) # hitaasti
+ #   ohjain.skannaa_askelta_nopeudella(1000, 15)
  #   sijaintitiedot = ohjain.sijainti()
  #   print(sijaintitiedot)
+ 
    # print(type(sijaintitiedot)) # tulosteen tyypin tarkistus
+  #  ohjain.siirry_askelta(90000, 70000, 20000) # askelmäärät joilla kelkka  
+                      # siirretään alustuksen jälkeen kehikon toiseen ääreen
 
-
-        #TAPA2, SKANNAUS KUN TARVITTAVAT SIJAINNIT ASKELMÄÄRINÄ ON SELVITETTY:
-    ohjain.aloituskohta(0, 0, 400) 
-    ohjain.lopetuskohta(24177)
-    ohjain.siirtyma(3656)
-    kuvaustiedot = ohjain.skannaa_viipaletta_nopeudella("framet_1", 8, 4)
+    #TAPA2, SKANNAUS KUN TARVITTAVAT SIJAINNIT (YKSIKKÖNÄ ASKELMÄÄRÄ) ON SELVITETTY:
+    # JOS MITAT ON SELVILLÄ (JA MUUNNETTU ASKELMÄÄRIKSI, KS. MITAT()), EI 1-LIIKUTTELUTAPOJA OLE
+    # PAKKO KÄYTTÄÄ, VAAN VOI SYÖTTÄÄ TIEDOT SUORAANKIN.
+    ohjain.aloituskohta(150, 100, 400) # = kohta josta kuvaaminen aloitetaan 
+    ohjain.lopetuskohta(16310) # = yksittäisen framesarjan päätepiste suhteessa y:hyn
+    ohjain.siirtyma(3656) # = paljonko siirrytään oikealle ennen seuraavan sarjan alkua 
+    kuvaustiedot = ohjain.skannaa_viipaletta_nopeudella("framet_1", 8, 4) # käsketään aloittaa liikesarja
     print(kuvaustiedot)
    
+    #LOPETUSTOIMET - älä poista näitä
     ohjain.lopeta()
 if __name__ == "__main__":
     main()
