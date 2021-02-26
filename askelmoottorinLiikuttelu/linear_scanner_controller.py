@@ -390,6 +390,8 @@ class Moottorit:
         Before each step, the limit switches are checked.
         Tarkistaa ennen jokaista askelta, ollaanko tultu jommalle kummalle
         rajakytkimelle.
+        TODO: Jotta askelia ei hukata, tarvittaessa koodiin lisätään 
+        liikkeellelähtöön "kiihdytys" ja pysähtymiseen "jarrutus".
         """
         if moottorin_nimi == 'x':
             moottori = self.moottori_x
@@ -432,6 +434,8 @@ class Moottorit:
         Nopeus-parametri: mitä pienempi luku, sitä nopeampi vauhti. 
         Kuitenkin vähintään 4 (vaikka ajureiden minimi 2.5, y-moottorin 
         esiintyy sijaintitiedoissa vaihtelua alle 4:n nopeudella.)
+        TODO: Jotta askelia ei hukata ja vauhti voidaan pitää tasaisena, 
+        tarvittaessa nopeusrajoitusta voidaan kiristää.
         """
         if nopeus < 4: 
             print("Skannausfunktiolle annettavan nopeuskertoimen oltava min.4")
